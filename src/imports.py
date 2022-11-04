@@ -6,3 +6,4 @@ import sklearn
 import tqdm
 import cv2
 import matplotlib.pyplot as plt
+from PIL import Image
