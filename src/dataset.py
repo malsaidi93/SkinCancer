@@ -31,7 +31,7 @@ class SkinCancer(Dataset):
         self.transform = transform
 
         self.df = pd.read_csv(self.meta)
-        self.image_paths = glob.glob(os.path.join(self.root_dir, 'HAM10000/*.jpg'))
+        self.image_paths = self.df['image_path'].to_list()
         self.image_ids = self.df['image_id'].to_list()
         self.classes = self.df['dx'].unique().tolist()
 
@@ -42,46 +42,44 @@ class SkinCancer(Dataset):
         
 
 
-        self.file_names_ids = {i:v for v,i in enumerate(self.file_names)}
+        # self.file_names_ids = {i:v for v,i in enumerate(self.file_names)}
         
         
         
         
 
     def __len__(self):
-        return len(glob.glob(self.root_dir+'/**/*.jpg'))
+        return len(self.image_paths)
     
 
     
-    def __distribution__(self):
-        # # data_dir = self.root_dir + '/train'
-        # classes_path = glob.glob(self.root_dir+'/**/*.jpg')
-        # # classes_path = glob.glob('../../skin_cancer_data/Train'+'/*')
-        # classes = [i.split('/')[-1] for i in classes_path]
-        class_dcit_lists=[]
-        for idx in range(0, len(self.classes)):
-            class_dict = {}    
-            class_dict['class'] = self.classes[idx]
-            class_dict['files'] = glob.glob(self.root_dir+'/'+self.classes[idx]+'/*.jpg')
-            class_dict['size'] = len(class_dict['files'])
-            class_dcit_lists.append(class_dict)
-        sorted_list = sorted(class_dcit_lists, key= lambda class_dcit_lists: class_dcit_lists['size'])
-        return sorted_list
+    # def __distribution__(self):
+    #     # # data_dir = self.root_dir + '/train'
+    #     # classes_path = glob.glob(self.root_dir+'/**/*.jpg')
+    #     # # classes_path = glob.glob('../../skin_cancer_data/Train'+'/*')
+    #     # classes = [i.split('/')[-1] for i in classes_path]
+    #     class_dcit_lists=[]
+    #     for idx in range(0, len(self.classes)):
+    #         class_dict = {}
+    #         class_dict['class'] = self.classes[idx]
+    #         class_dict['files'] = glob.glob(self.root_dir+'/'+self.classes[idx]+'/*.jpg')
+    #         class_dict['size'] = len(class_dict['files'])
+    #         class_dcit_lists.append(class_dict)
+    #     sorted_list = sorted(class_dcit_lists, key= lambda class_dcit_lists: class_dcit_lists['size'])
+    #     return sorted_list
 
 
     def __getitem__(self, idx):
         
         # aug_list = [1,2,3,4,5,6,7,8]
-        
-        image_paths = glob.glob(self.root_dir+'/**/*.jpg')
 
-        random.shuffle(image_paths)
-        
-        
-        image = Image.open(image_paths[idx])
-        label = image_paths[idx].split('/')[-2] 
+        img_path = self.df.iloc[idx, -1]
+        label = self.df.iloc[idx, 2]
+
+        image = Image.open(img_path)
         
         image = transforms.Resize(size=(224,224))(image)
+        image_tensor = transforms.ToTensor()(image)
 
         # x = random.choice(aug_list)
         # image_tensor = augment(image,x)
