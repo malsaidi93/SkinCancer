@@ -6,4 +6,4 @@ mkdir $file
 cd $file
 
 echo "DOownloading"
-curl -L $url -o $file && unzip -q $file -d $dir && rm $file &
+curl -L $url -o $file && unzip -q $file -d $file && rm $file
