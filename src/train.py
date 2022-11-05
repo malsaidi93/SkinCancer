@@ -109,11 +109,11 @@ def valid_epoch(model,device,dataloader,loss_fn):
         
     # y_true = np.array(y_true)
     # y_pred = np.array(y_pred)
-    cf_matrix = confusion_matrix(y_true, y_pred)
+    # cf_matrix = confusion_matrix(y_true, y_pred)
     
     
 
-    return valid_loss,val_correct, cf_matrix
+    return valid_loss,val_correct
 
 
                                        
@@ -139,7 +139,7 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
         y_pred.extend(predictions.cpu().numpy())
         
 
-    cf_matrix = confusion_matrix(y_true, y_pred)
+    # cf_matrix = confusion_matrix(y_true, y_pred)
     
     wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
     
@@ -275,8 +275,8 @@ if __name__ == '__main__':
 
     # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
-            train_loss, train_correct=train_epoch(model,device,train_loader,criterion,optimizer)
-            val_loss, val_correct, cf_matrix=valid_epoch(model,device,val_loader,criterion)
+            train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
+            val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
@@ -340,7 +340,7 @@ if __name__ == '__main__':
         
             
         
-        print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+        print("Fold:{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
         
         wandb.log({"test_loss" : test_loss,
                    "test_acc" : test_acc})
@@ -371,8 +371,8 @@ if __name__ == '__main__':
 #     dff.to_csv(f'../save_new_baseline/baseline_crossvalidation/{model._get_name()}_{args.optimizer}_{k}CV_{args.epochs}EPOCHS_TST.csv')
 
 
-#     end_train = time.time()
-#     time_elapsed = start_t - end_train
+    end_train = time.time()
+    time_elapsed = start_t - end_train
 
 
     print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
