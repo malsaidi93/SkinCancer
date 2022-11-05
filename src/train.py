@@ -28,7 +28,7 @@ from config import args_parser
 from models import *
 from dataset import SkinCancer
 
-# from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix
 # import tensorflow as tf
 
 import wandb
@@ -150,8 +150,8 @@ if __name__ == '__main__':
     
     
     args = args_parser()
-    
-    wandb.Api(api_key="7591f651690491f93838963333fd6757dbd71440")
+    wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
+    # wandb.Api(api_key="7a2f300a61c6b3c4852452a09526c40098020be2")
 
     wandb.init(
     # Set the project where this run will be logged
@@ -169,11 +169,15 @@ if __name__ == '__main__':
     # Set device parameter
     if args.gpu:
         if os.name == 'posix' and torch.backends.mps.is_available(): # device is mac m1 chip
+            print(f"<----------Using MPS--------->")
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available(): # device is windows with cuda
             device = 'cuda'
+            print(f"<----------Using CUDA--------->")
         else:
+            print(f"<----------Using CPU--------->")
             device = 'cpu' # use cpu
+             
     
     
     
@@ -341,7 +345,6 @@ if __name__ == '__main__':
             
         
         print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        
         wandb.log({"test_loss" : test_loss,
                    "test_acc" : test_acc})
         
