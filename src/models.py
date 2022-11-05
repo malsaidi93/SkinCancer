@@ -14,12 +14,6 @@ def efficientnet():
 
     return model
 
-def vgg():
-
-    model = models.vgg19(weights='VGG19_Weights.DEFAULT')
-    model.classifier[6].out_features = 7
-
-    return model
 
 
 def resnet():

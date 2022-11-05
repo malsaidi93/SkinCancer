@@ -1,4 +1,3 @@
-
 import os, sys, glob
 import torch
 import numpy as np
@@ -31,7 +30,11 @@ class SkinCancer(Dataset):
         self.transform = transform
 
         self.df = pd.read_csv(self.meta)
-        self.image_paths = self.df['image_pth'].to_list()
+        try:
+            self.image_paths = self.df['image_pth'].to_list()
+        except:
+            self.image_paths = self.df['image_path'].to_list()
+            
         self.image_ids = self.df['image_id'].to_list()
         self.classes = self.df['dx'].unique().tolist()
 
@@ -39,6 +42,10 @@ class SkinCancer(Dataset):
         self.class_id = {i:j for i, j in enumerate(self.classes)}
 
         self.class_to_id = {value:key for key,value in self.class_id.items()}
+        
+        self.class_count =  self.df['dx'].value_counts().to_dict()
+        
+        self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
         
 
 
