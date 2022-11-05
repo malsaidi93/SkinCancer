@@ -3,7 +3,7 @@ import torch.nn as nn
 from torchvision import models
 
 
-class CNN():
+class cnn():
     pass
 
 

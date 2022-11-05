@@ -16,3 +16,16 @@ bcc,514
 akiec,327
 vasc,142
 df,115
+
+
+## Models to be used
+
+1. Efficientnet
+
+2. ViT
+
+3. ConvNext
+
+4. ResNet50
+
+5. CNN 

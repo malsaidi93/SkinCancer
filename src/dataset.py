@@ -31,7 +31,7 @@ class SkinCancer(Dataset):
         self.transform = transform
 
         self.df = pd.read_csv(self.meta)
-        self.image_paths = self.df['image_path'].to_list()
+        self.image_paths = self.df['image_pth'].to_list()
         self.image_ids = self.df['image_id'].to_list()
         self.classes = self.df['dx'].unique().tolist()
 

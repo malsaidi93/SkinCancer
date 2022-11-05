@@ -4,5 +4,5 @@ data/HAM10k/*
 *.iml
 *.xml
 *.DS_Store
-
+src/wandb/*
 
