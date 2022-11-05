@@ -152,10 +152,6 @@ if __name__ == '__main__':
     args = args_parser()
     
     
- 
-
-    
-    
     # Set device parameter
     if args.gpu:
         if os.name == 'posix' and torch.backends.mps.is_available(): # device is mac m1 chip
@@ -166,7 +162,12 @@ if __name__ == '__main__':
             device = 'cpu' # use cpu
             
 # ======================= Logger ======================= #      
-    # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
+    # wandb login --relogin
+    wandb.login(key="7591f651690491f93838963333fd6757dbd71440", relogin=True)
+    
+    
+#     os.environ["WANDB_API_KEY"] = '7591f651690491f93838963333fd6757dbd71440'
+#     os.environ["WANDB_MODE"] = "offline"
     
     wandb.init(
     # Set the project where this run will be logged
@@ -229,7 +230,7 @@ if __name__ == '__main__':
     
     if args.imbalanced:
     #loss function with class weights
-        criterion = nn.CrossEntropyLoss(weight = dataset.class_weights) 
+        criterion = nn.CrossEntropyLoss(weight = torch.tensor(dataset.class_weights)) 
     
     else:
         criterion = nn.CrossEntropyLoss()
