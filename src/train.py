@@ -22,7 +22,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from sklearn.model_selection import train_test_split
-
+from sklearn.utils import class_weight
 
 from config import args_parser
 from models import *
@@ -78,6 +78,8 @@ def train_epoch(model,device,dataloader,loss_fn,optimizer):
         images,labels = images.to(device),labels.to(device)
         optimizer.zero_grad()
         output = model(images)
+        # print('outputs',output.shape)
+        # print('labels',labels.shape)
         loss = loss_fn(output,labels)
         loss.backward()
         optimizer.step()
@@ -152,22 +154,21 @@ if __name__ == '__main__':
     args = args_parser()
     
     
+ 
+
+    
+    
     # Set device parameter
     if args.gpu:
         if os.name == 'posix' and torch.backends.mps.is_available(): # device is mac m1 chip
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available(): # device is windows with cuda
             device = 'cuda'
-        else:
-            device = 'cpu' # use cpu
+        # else:
+        #     device = 'cpu' # use cpu
             
 # ======================= Logger ======================= #      
-    # wandb login --relogin
-    wandb.login(key="7591f651690491f93838963333fd6757dbd71440", relogin=True)
-    
-    
-#     os.environ["WANDB_API_KEY"] = '7591f651690491f93838963333fd6757dbd71440'
-#     os.environ["WANDB_MODE"] = "offline"
+    # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
     
     wandb.init(
     # Set the project where this run will be logged
@@ -230,7 +231,12 @@ if __name__ == '__main__':
     
     if args.imbalanced:
     #loss function with class weights
-        criterion = nn.CrossEntropyLoss(weight = torch.tensor(dataset.class_weights)) 
+        print(model.classifier)
+        class_weights=class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=np.array(dataset.classes_all))
+        class_weights=torch.FloatTensor(class_weights).cuda()
+        # class_weights = class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=self.df['dx'].to_numpy()),device='cuda')
+        criterion = nn.CrossEntropyLoss(weight = class_weights,reduction='mean') 
+        
     
     else:
         criterion = nn.CrossEntropyLoss()
