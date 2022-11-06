@@ -5,4 +5,4 @@ data/HAM10k/*
 *.xml
 *.DS_Store
 src/wandb/*
-wandb/*
+**/__pycache__/ 

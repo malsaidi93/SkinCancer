@@ -1,4 +1,3 @@
-
 import os, sys, glob
 import torch
 import numpy as np
@@ -8,6 +7,7 @@ from torchvision import transforms, utils
 import pandas as pd
 from PIL import Image
 import random
+from sklearn.utils import class_weight
 # from do_augmentation import augment
 
 
@@ -31,14 +31,24 @@ class SkinCancer(Dataset):
         self.transform = transform
 
         self.df = pd.read_csv(self.meta)
-        self.image_paths = self.df['image_pth'].to_list()
+        try:
+            self.image_paths = self.df['image_pth'].to_list()
+        except:
+            self.image_paths = self.df['image_path'].to_list()
+            
         self.image_ids = self.df['image_id'].to_list()
         self.classes = self.df['dx'].unique().tolist()
+        self.classes_all = self.df['dx'].tolist()
 
         
         self.class_id = {i:j for i, j in enumerate(self.classes)}
 
         self.class_to_id = {value:key for key,value in self.class_id.items()}
+        
+        self.class_count =  self.df['dx'].value_counts().to_dict()
+        
+        # self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
+        # self.class_weights = torch.tensor(class_weight.compute_class_weight('balanced',classes=np.unique(self.df['dx'].to_numpy()),y=self.df['dx'].to_numpy()),device='cuda')
         
 
 
