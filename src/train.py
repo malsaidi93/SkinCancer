@@ -3,7 +3,7 @@ import os, copy, random
 import itertools
 import io
 
-
+import sys
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     
     wandb.init(
     # Set the project where this run will be logged
-    project = "SkinCancer_CV_UpdateWeights_WeightedCrossEntropy", entity="fau-computer-vision", 
+    project = "SkinCancer_Minority_CV_UpdateWeights_WeightedCrossEntropy", entity="fau-computer-vision", 
     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
     # Track hyperparameters and run metadata
     config = {
@@ -193,10 +193,16 @@ if __name__ == '__main__':
 
     
 
-    dataset = SkinCancer(data_dir, '../data/train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/minority_train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/minority_test.csv', transform=None)
+    
+    classes=np.unique(dataset.classes)
+    
+    # print(classes)
+    # sys.exit()
+    
         
     
     
@@ -322,11 +328,11 @@ if __name__ == '__main__':
             print('#'*25)
             best_acc = test_acc
             best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}.pth')
+            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_minority.pth')
             
             # Save Scripted Model 
             scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}.pt')
+            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_minority.pt')
             
 
 

@@ -11,7 +11,7 @@ def efficientnet():
 
     model = models.efficientnet_b0(weights='EfficientNet_B0_Weights.DEFAULT')
     old_fc = model.classifier.__getitem__(-1)
-    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 6, bias=True)
     model.classifier.__setitem__(-1 , new_fc)
 
     # model.classifier[1].out_features = 7
@@ -23,9 +23,9 @@ def efficientnet():
 def resnet():
     model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
     # model.fc.out_features = 7
-    old_fc = model.fc.__getitem__(-1)
-    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
-    model.heads.__setitem__(-1 , new_fc)
+    old_fc = model.fc
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 6, bias=True)
+    model.fc = new_fc
     return model
 
 
