@@ -231,7 +231,7 @@ if __name__ == '__main__':
     
     if args.imbalanced:
     #loss function with class weights
-        print(model.classifier)
+        # print(model.classifier)
         class_weights=class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=np.array(dataset.classes_all))
         class_weights=torch.FloatTensor(class_weights).cuda()
         # class_weights = class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=self.df['dx'].to_numpy()),device='cuda')
@@ -282,9 +282,8 @@ if __name__ == '__main__':
             val_acc = val_correct / len(val_loader.sampler) * 100
 
 
-            print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, 
-                                                                                                                                             train_loss,  val_loss, 
-                                                                                                                                             train_acc,  val_acc))
+            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
 
     # ======================= Save per Epoch ======================= #
 
@@ -307,7 +306,8 @@ if __name__ == '__main__':
         
             
         
-        print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+        # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+        print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
         wandb.log({"test_loss" : test_loss,
                    "test_acc" : test_acc})
         
