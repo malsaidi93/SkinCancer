@@ -28,7 +28,7 @@ from config import args_parser
 from models import *
 from dataset import SkinCancer
 
-# from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix
 # import tensorflow as tf
 
 import wandb
@@ -109,10 +109,13 @@ def valid_epoch(model,device,dataloader,loss_fn):
         y_pred.extend(predictions.cpu().numpy())
         
         
-
+    # y_true = np.array(y_true)
+    # y_pred = np.array(y_pred)
+    cf_matrix = confusion_matrix(y_true, y_pred)
+    
     
 
-    return valid_loss,val_correct
+    return valid_loss,val_correct, cf_matrix
 
 
                                        
@@ -138,7 +141,7 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
         y_pred.extend(predictions.cpu().numpy())
         
 
-    # cf_matrix = confusion_matrix(y_true, y_pred)
+    cf_matrix = confusion_matrix(y_true, y_pred)
     
     wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
     
@@ -149,20 +152,22 @@ if __name__ == '__main__':
     
     
     args = args_parser()
-    
-    
- 
+    wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
+    # wandb.Api(api_key="7a2f300a61c6b3c4852452a09526c40098020be2")
 
     
     
     # Set device parameter
     if args.gpu:
         if os.name == 'posix' and torch.backends.mps.is_available(): # device is mac m1 chip
+            print(f"<----------Using MPS--------->")
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available(): # device is windows with cuda
+            print(f'"<----------Using CUDA--------->')
             device = 'cuda'
-        # else:
-        #     device = 'cpu' # use cpu
+        else:
+            print(f'"<----------Using CPU--------->')
+            device = 'cpu'
             
 # ======================= Logger ======================= #      
     # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
@@ -185,15 +190,15 @@ if __name__ == '__main__':
     
 # ======================= DATA ======================= #
     
-    data_dir = '../data/HAM10k/HAM10000_images'
+    data_dir = '../data/Combined_data/'
 
 
     
 
-    dataset = SkinCancer(data_dir, '../data/meta_augment_train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/Meta_Train_Aug.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/meta_augment_test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/Meta_Test_Aug.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
@@ -234,7 +239,7 @@ if __name__ == '__main__':
     
     if args.imbalanced:
     #loss function with class weights
-        print(model.classifier)
+        # print(model.classifier)
         class_weights=class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=np.array(dataset.classes_all))
         class_weights=torch.FloatTensor(class_weights).cuda()
         # class_weights = class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=self.df['dx'].to_numpy()),device='cuda')
@@ -276,8 +281,8 @@ if __name__ == '__main__':
 
     # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
-            train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
-            val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
+            train_loss, train_correct=train_epoch(model,device,train_loader,criterion,optimizer)
+            val_loss, val_correct, cf_matrix=valid_epoch(model,device,val_loader,criterion)
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
@@ -285,9 +290,8 @@ if __name__ == '__main__':
             val_acc = val_correct / len(val_loader.sampler) * 100
 
 
-            print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, 
-                                                                                                                                             train_loss,  val_loss, 
-                                                                                                                                             train_acc,  val_acc))
+            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
 
     # ======================= Save per Epoch ======================= #
 
@@ -310,8 +314,8 @@ if __name__ == '__main__':
         
             
         
-        print("Fold:{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        
+        # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+        print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
         wandb.log({"test_loss" : test_loss,
                    "test_acc" : test_acc})
         
@@ -338,7 +342,6 @@ if __name__ == '__main__':
 
     end_train = time.time()
     time_elapsed = start_t - end_train
-
 
     print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
