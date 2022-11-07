@@ -32,7 +32,7 @@ class SkinCancer(Dataset):
 
         self.df = pd.read_csv(self.meta)
         try:
-            self.image_paths = self.df['image_pth'].to_list()
+            self.image_paths = self.df['new_paths'].to_list()
         except:
             self.image_paths = self.df['image_path'].to_list()
             

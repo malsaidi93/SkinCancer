@@ -1,4 +1,6 @@
 data/HAM10k/*
+data/Combined_data/*
+data/Augmented_rename
 .idea/*
 *.ipynb_checkpoints
 *.iml

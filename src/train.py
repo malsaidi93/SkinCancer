@@ -174,7 +174,7 @@ if __name__ == '__main__':
     
     wandb.init(
     # Set the project where this run will be logged
-    project = "SkinCancer_Minority_CV_UpdateWeights_WeightedCrossEntropy", entity="fau-computer-vision", 
+    project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
     # Track hyperparameters and run metadata
     config = {
@@ -190,15 +190,15 @@ if __name__ == '__main__':
     
 # ======================= DATA ======================= #
     
-    data_dir = '../data/HAM10k/HAM10000_images'
+    data_dir = '../data/Combined_data/'
 
 
     
 
-    dataset = SkinCancer(data_dir, '../data/minority_train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/Meta_Train_Aug.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/minority_test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/Meta_Test_Aug.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
