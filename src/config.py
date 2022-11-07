@@ -14,7 +14,7 @@ def args_parser():
     parser.add_argument('--batch', type=int, default=16,
                         help='batch size')
 
-    parser.add_argument('--model', type=str, default='efficientnet', help='model name')
+    parser.add_argument('--model', type=str, default='resnet', help='model name')
 
     parser.add_argument('--num_classes', type=int, default=7, help="number \
                         of classes")

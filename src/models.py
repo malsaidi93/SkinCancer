@@ -22,9 +22,14 @@ def efficientnet():
 
 def resnet():
     model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
+<<<<<<< Updated upstream
     # model.fc.out_features = 7
     old_fc = model.fc
     new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 6, bias=True)
+=======
+    old_fc = model.fc
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
+>>>>>>> Stashed changes
     model.fc = new_fc
     return model
 

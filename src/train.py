@@ -163,9 +163,11 @@ if __name__ == '__main__':
             print(f"<----------Using MPS--------->")
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available(): # device is windows with cuda
+            print(f'"<----------Using CUDA--------->')
             device = 'cuda'
-        # else:
-        #     device = 'cpu' # use cpu
+        else:
+            print(f'"<----------Using CPU--------->')
+            device = 'cpu'
             
 # ======================= Logger ======================= #      
     # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
@@ -338,9 +340,8 @@ if __name__ == '__main__':
 
 
 
-#     end_train = time.time()
-#     time_elapsed = start_t - end_train
-
+    end_train = time.time()
+    time_elapsed = start_t - end_train
 
     print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
 
