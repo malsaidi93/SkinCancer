@@ -25,7 +25,7 @@ def args_parser():
     parser.add_argument('--optimizer', type=str, default='adamx', help="type \
                         of optimizer")
     
-    parser.add_argument('--imbalanced', type=bool, default=True, help="To use cuda, set \
+    parser.add_argument('--imbalanced', type=bool, default=False, help="To use cuda, set \
                         to a specific GPU ID. Default set to use CPU.")
 
     parser.add_argument('--momentum', type=float, default=0.9,
