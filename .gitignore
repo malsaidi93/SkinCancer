@@ -12,6 +12,7 @@ src/wandb/*
 wandb/*
 **/__pycache__/ 
 *.pth
+*/*.pth
 */*.pt
 
 requirements.txt

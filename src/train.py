@@ -332,7 +332,7 @@ if __name__ == '__main__':
             
             # Save Scripted Model 
             scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_minority.pt')
+            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_minority.pth')
             
 
 
