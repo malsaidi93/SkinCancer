@@ -1,3 +1,4 @@
+
 import time
 import os, copy, random
 import itertools
@@ -15,8 +16,6 @@ import torchvision
 import torchvision.transforms as transforms
 from torchvision import datasets, models, transforms
 
-
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -32,9 +31,6 @@ from sklearn.metrics import confusion_matrix
 # import tensorflow as tf
 
 import wandb
-
-
-
 
     
 def plot_confusion_matrix(cm, class_names):
@@ -222,6 +218,9 @@ if __name__ == '__main__':
         
     elif args.model == 'convnext':
         model = convnext()
+    
+    elif args.model == 'alexnet':
+        model = alexnet()
         
     elif args.model == 'cnn':
         model = cnn()

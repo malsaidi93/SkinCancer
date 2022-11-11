@@ -48,5 +48,11 @@ def convnext():
 
     return model
 
+def alexnet():
+    model = models.alexnet(pretrained=True)
+    model.classifier[2].out_features = 7
+    return model
+    
+
 
 
