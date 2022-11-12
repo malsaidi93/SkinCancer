@@ -27,7 +27,7 @@ from config import args_parser
 from models import *
 from dataset import SkinCancer
 
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, f1_score
 # import tensorflow as tf
 
 import wandb
@@ -82,6 +82,7 @@ def train_epoch(model,device,dataloader,loss_fn,optimizer):
         train_loss += loss.item() * images.size(0)
         scores, predictions = torch.max(output.data, 1)
         train_correct += (predictions == labels).sum().item()
+                    
 
     return train_loss,train_correct
   
@@ -138,7 +139,9 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
         
 
     cf_matrix = confusion_matrix(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred, average='weighted')
     
+    print(f"F1_score: {f1}")
     wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
     
 

@@ -9,7 +9,7 @@ class cnn():
 
 def efficientnet():
 
-    model = models.efficientnet_b0(weights='EfficientNet_B0_Weights.DEFAULT')
+    model = models.efficientnet_b0(weights='EfficientNet_B4_Weights.DEFAULT')
     old_fc = model.classifier.__getitem__(-1)
     new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
     model.classifier.__setitem__(-1 , new_fc)
@@ -50,7 +50,17 @@ def convnext():
 
 def alexnet():
     model = models.alexnet(pretrained=True)
-    model.classifier[2].out_features = 7
+    old_fc = model.classifier.__getitem__(-1)
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
+    model.classifier.__setitem__(-1 , new_fc)
+    return model
+
+
+def resnext():
+    model = models.resnext50_32x4d(weights=ResNeXt50_32X4D_Weights.DEFAULT)
+    old_fc = model.fc
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
+    model.fc = new_fc
     return model
     
 
