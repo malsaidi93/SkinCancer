@@ -1,0 +1,19 @@
+# sweep.yaml
+program: train.py
+method: random
+metric:
+ name: test_loss
+ goal: minimize
+parameters:
+ learning-rate:
+   min: 0.00001
+   max: 0.1
+ optimizer:
+   values: ["adamx", "sgd"]
+ epochs:
+   value: 30
+early_terminate:
+   type: hyperband
+   s: 2
+   eta: 3
+   max_iter: 30

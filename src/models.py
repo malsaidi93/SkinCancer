@@ -9,7 +9,7 @@ class cnn():
 
 def efficientnet():
 
-    model = models.efficientnet_b0(weights='EfficientNet_B4_Weights.DEFAULT')
+    model = models.efficientnet_b4(weights='EfficientNet_B4_Weights.DEFAULT')
     old_fc = model.classifier.__getitem__(-1)
     new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
     model.classifier.__setitem__(-1 , new_fc)

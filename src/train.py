@@ -27,7 +27,7 @@ from config import args_parser
 from models import *
 from dataset import SkinCancer
 
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
 # import tensorflow as tf
 
 import wandb
@@ -140,6 +140,7 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
 
     cf_matrix = confusion_matrix(y_true, y_pred)
     f1 = f1_score(y_true, y_pred, average='weighted')
+    area_auc = roc_auc_score(y_true, y_pred, average='weighted')
     
     print(f"F1_score: {f1}")
     wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
@@ -331,11 +332,11 @@ if __name__ == '__main__':
             print('#'*25)
             best_acc = test_acc
             best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_minority.pth')
+            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_aug.pth')
             
             # Save Scripted Model 
             scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_minority.pth')
+            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_aug.pth')
             
 
 
