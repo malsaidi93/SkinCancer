@@ -19,4 +19,6 @@ data/Aug2.0/*
 requirements.txt
 requirements.txt
 src/__pycache__/*
+src/*.png
 save/*
+
