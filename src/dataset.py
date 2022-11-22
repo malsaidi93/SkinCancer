@@ -46,7 +46,7 @@ class SkinCancer(Dataset):
         self.class_to_id = {value:key for key,value in self.class_id.items()}
         
         self.class_count =  self.df['dx'].value_counts().to_dict()
-        self.transform = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
+        self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
         
         # self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
         # self.class_weights = torch.tensor(class_weight.compute_class_weight('balanced',classes=np.unique(self.df['dx'].to_numpy()),y=self.df['dx'].to_numpy()),device='cuda')
@@ -87,11 +87,12 @@ class SkinCancer(Dataset):
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
 
-        image = Image.open(img_path).convert('L')
+        # image = Image.open(img_path).convert('L')
+        image = Image.open(img_path)
         # image = ImageOps.grayscale(image)
         
         # image = transforms.Resize(size=(224,224))(image)
-        image = transforms.Resize(size=(32,32))(image)
+        # image = transforms.Resize(size=(224,224))(image)
         # image_tensor = transforms.ToTensor()(image)
         # image_tensor = transforms.Normalize([0.5], [0.5])
         image_tensor = self.transform(image)
