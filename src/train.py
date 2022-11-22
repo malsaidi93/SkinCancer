@@ -1,11 +1,76 @@
-# Consolidated Imports
-from imports import *
+import time
+import os, copy, random
+import itertools
+import io
 
-# Additional Imports
+import sys
+import torch
+import torch.nn as nn
+from torch.nn import functional as F
+import torch.optim as optim
+from torch.optim import lr_scheduler
+from torch.utils.data import Dataset, DataLoader, Subset, random_split, SubsetRandomSampler, ConcatDataset
+
+import torchvision
+import torchvision.transforms as transforms
+from torchvision import datasets, models, transforms
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
+from sklearn.utils import class_weight
+
+from config import args_parser
 from models import *
 from dataset import SkinCancer
 from torch.utils.tensorboard import SummaryWriter
-# writer = SummaryWriter(log_dir='../log')
+
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, precision_score, recall_score
+
+# import tensorflow as tf
+
+import warnings
+import wandb
+warnings.filterwarnings('ignore')
+
+
+
+
+    
+def plot_confusion_matrix(cm, class_names):
+    """
+    Returns a matplotlib figure containing the plotted confusion matrix.
+    
+    Args:
+       cm (array, shape = [n, n]): a confusion matrix of integer classes
+       class_names (array, shape = [n]): String names of the integer classes
+    """
+    
+    figure = plt.figure(figsize=(8, 8))
+    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title("Confusion matrix")
+    plt.colorbar()
+    tick_marks = np.arange(len(class_names))
+    plt.xticks(tick_marks, class_names, rotation=45,fontsize=8,horizontalalignment='right')
+    plt.yticks(tick_marks, class_names,fontsize=8)
+    
+    # Normalize the confusion matrix.
+    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    
+    # Use white text if squares are dark; otherwise black.
+    threshold = cm.max() / 2.
+    
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > threshold else "black"
+        plt.text(j, i, cm[i, j], horizontalalignment="center", color=color,fontsize=7)
+        
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    return figure
+
     
 def train_epoch(model,device,dataloader,loss_fn,optimizer):
     train_loss,train_correct=0.0,0
@@ -30,7 +95,8 @@ def train_epoch(model,device,dataloader,loss_fn,optimizer):
 def valid_epoch(model,device,dataloader,loss_fn):
     valid_loss, val_correct = 0.0, 0
     model.eval()
-    y_true,y_pred = [], []
+    y_true,y_pred = [], [] # Use for Confusion Matrix
+    y_t,y_p = [], [] # Use for Metrics (f1, precision, recall)
     for images, labels in dataloader:
 
         images,labels = images.to(device),labels.to(device)
@@ -43,65 +109,101 @@ def valid_epoch(model,device,dataloader,loss_fn):
         
 
         
-        y_true.extend(labels.cpu().numpy())
-        y_pred.extend(predictions.cpu().numpy())
+#         y_true.extend(labels.cpu().numpy())
+#         y_pred.extend(predictions.cpu().numpy())
+        
+#         y_t.append(labels.cpu().numpy())
+#         y_p.append(predictions.cpu().numpy())
+        
         
         
     # y_true = np.array(y_true)
     # y_pred = np.array(y_pred)
-    cf_matrix = confusion_matrix(y_true, y_pred)
+#     cf_matrix = confusion_matrix(y_true, y_pred)
+    
+#     f_l = [f1_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
+#     p_l = [precision_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
+#     r_l = [recall_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
+#     # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
+    
+#     f1_s = sum(f_l)/len(f_l)
+#     # print('f1:', f1_s)
+#     p_s = sum(p_l)/len(p_l)
+#     r_s = sum(r_l)/len(r_l)
+    
+#     df = {'F1_Score' : f1_s,
+#           'Precision' : p_s, 
+#           'Recall' : r_s}
+    
+#     metrics_table.add_data(data=df)
+    
+#     wandb.log({"TrainingConfusionMatrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
     
     
 
-    return valid_loss,val_correct, cf_matrix
+    return valid_loss,val_correct
 
 
                                        
                                                            
 def test_inference(model,device,dataloader,loss_fn,class_names):
                                                            
-    valid_loss, val_correct = 0.0, 0
+    test_loss, test_correct = 0.0, 0
     model.eval()
-    y_true,y_pred = [], []
+    y_true,y_pred = [], [] # Use for Confusion Matrix
+    y_t,y_p = [], [] # Use for Metrics (f1, precision, recall)
     for images, labels in dataloader:
 
         images,labels = images.to(device),labels.to(device)
         output = model(images)
         loss=loss_fn(output,labels)
-        valid_loss+=loss.item()*images.size(0)
+        test_loss+=loss.item()*images.size(0)
         scores, predictions = torch.max(output.data,1)
         
-        val_correct+=(predictions == labels).sum().item()
+        test_correct+=(predictions == labels).sum().item()
         
 
         
         y_true.extend(labels.cpu().numpy())
         y_pred.extend(predictions.cpu().numpy())
         
+        y_t.append(labels.cpu().numpy())
+        y_p.append(predictions.cpu().numpy())
+        
+        
 
     cf_matrix = confusion_matrix(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred, average='weighted')
-    # area_auc = roc_auc_score(y_true, y_pred, average='weighted')
+    cf_figure = plot_confusion_matrix(cf_matrix, class_names)
     
-    try:
-        plot_confusion_matrix(cf_matrix, class_names, save=True)
-        writer.add_figure(plot_confusion_matrix)
-    except:
-        print(f'Test_Inference :: plot_confusion_matrix >>>> Error During plotting Confusion Matrix <<<<')
+    f_l = [f1_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+    p_l = [precision_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+    r_l = [recall_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+    # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
     
-    print(f"F1_score: {f1}")
-    # wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
+    f1_s = sum(f_l)/len(f_l)
+    # print('f1:', f1_s)
+    p_s = sum(p_l)/len(p_l)
+    r_s = sum(r_l)/len(r_l)
+    
+#     df = {'F1_Score' : f1_s,
+#           'Precision' : p_s, 
+#           'Recall' : r_s}
+    
+    # metrics_table.add_data(f1_s,p_s,r_s)
+    
+    
+#     wandb.log({"Testing-Confusion-Matrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
+    
+#     wandb.log({"Metrics-Table": wandb.Table(columns=['F1_Score','Precision','Recall'], data=[[f1_s, p_s, r_s]])})
     
 
-    return valid_loss,val_correct
+    return test_loss,test_correct, cf_figure
 
 if __name__ == '__main__':
     
     
     args = args_parser()
-    # wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
-    # wandb.Api(api_key="7a2f300a61c6b3c4852452a09526c40098020be2")
-
+    
     
     
     # Set device parameter
@@ -115,21 +217,15 @@ if __name__ == '__main__':
         else:
             print(f'"<----------Using CPU--------->')
             device = 'cpu'
-            
-# ======================= Logger ======================= #      
-    # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
+
     
-#     wandb.init(
-#     # Set the project where this run will be logged
-#     project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
-#     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-#     # Track hyperparameters and run metadata
-#     config = {
-#     "learning_rate": args.lr,
-#     "architecture": args.model,
-#     "dataset": "Skin Cancer",
-#     "epochs": args.epochs
-#     })
+    
+    # Initialize metrics table to log metrics to wandb
+    
+    # metrics_table = wandb.Table(columns=['F1_Score','Precision','Recall'])
+    
+    
+    
     
     k=5
     splits=KFold(n_splits=k,shuffle=True,random_state=42)
@@ -137,24 +233,21 @@ if __name__ == '__main__':
     
 # ======================= DATA ======================= #
     
-    data_dir = '../data/Aug2.0/'
+    data_dir = '../data/Combined_data/'
 
 
     
 
-    dataset = SkinCancer(data_dir, '../data/minority_train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/minority_test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
     # print(classes)
     # sys.exit()
-    
-        
-    
-    
+
 # ======================= Model | Loss Function | Optimizer ======================= # 
 
     if args.model == 'efficientnet':
@@ -203,17 +296,43 @@ if __name__ == '__main__':
 
     class_names = dataset.classes
     
-    writer = SummaryWriter(log_dir=f'../log/{model._get_name()}')
+    # ======================= Logger ======================= #      
+    # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
+    
+
+    
+    if args.logger == 'tb':
+        
+        logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/Run2')
+        
+    elif args.logger == 'wb':
+        wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
+        logger = wandb.init(
+        # Set the project where this run will be logged
+        project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
+        # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+        # Track hyperparameters and run metadata
+        config = {
+        "learning_rate": args.lr,
+        "architecture": args.model,
+        "dataset": "Skin Cancer",
+        "epochs": args.epochs
+        })
+        
+    else:
+        logger = None
     
     # ======================= Start ======================= #
     start_t = time.time() 
         
     best_acc = 0.0
     
+    step = 0
+    
     for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         print('Fold {}'.format(fold))
-        print('Details :: Model: {}, lr: {}, Opt: {}'.format(model._get_name(), args.lr, args.optimizer))
+        print('Model {}'.format(model._get_name()))
         # print('Wandb Run Name: {}'.format(wandb.run.name))
         
         
@@ -233,39 +352,62 @@ if __name__ == '__main__':
 
     # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
-            train_loss, train_correct=train_epoch(model,device,train_loader,criterion,optimizer)
-            val_loss, val_correct, cf_matrix=valid_epoch(model,device,val_loader,criterion)
+            step+=1
+            train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
+            val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
+            test_loss_epoch, test_acc_epoch, cf_figure = test_inference(model,device,test_loader,criterion,class_names)
+            logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
             val_loss = val_loss / len(val_loader.sampler)
             val_acc = val_correct / len(val_loader.sampler) * 100
-
-
-            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss,train_acc,  val_acc))
-            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss:.2f} \t Validation Loss: {val_loss:.2f}\nAVG Training Acc: {train_acc:.2f}% \t Validation Acc: {val_acc:.2f}%")
             
-            if args.tensorboard:
-                writer.add_scalar('Training Loss', train_loss)
-                writer.add_scalar('Validation Loss', val_loss)
-                writer.add_scalar('Training Accuracy', train_acc)
-                writer.add_scalar('Validation Accuracu', val_acc)
-                # plot_confusion_matrix(cf_matrix, class_names, save=False)
-                # writer.add_figure(plot_confusion_matrix)
+            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
+            
+            
+            test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
+            test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
+
+
+            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+            
+            
+
     # ======================= Save per Epoch ======================= #
 
+            logger.add_scalars('Loss', {'train':train_loss,
+                                    'val':val_loss,
+                                    'test':test_loss_epoch}, step)
+        
+            logger.add_scalars('Acc', {'train':train_acc,
+                                    'val':val_acc,
+                                    'test':test_acc_epoch}, step)
+        
+
+            
+            # ======================= Save model if new high accuracy ======================= #
+            if test_acc_epoch > best_acc:
+                print('#'*25)
+                print('New High Acc: ', test_acc_epoch)
+                print('#'*25)
+                best_acc = test_acc_epoch
+                best_model_wts = copy.deepcopy(model.state_dict())
+                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
+
+                # Save Scripted Model 
+                scripted_model = torch.jit.script(model)
+                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
 
 
-#             wandb.log({"train_loss" : train_loss,
-#                    "train_acc" : train_acc , 
-#                    "val_loss" : val_loss ,
-#                    "val_acc" : val_acc})
             
         
         
     # ======================= Test Model on HOS ======================= #
 
-        test_loss, test_correct = test_inference(model,device,test_loader,criterion,class_names)
+        test_loss, test_correct, cf_figure_fold = test_inference(model,device,test_loader,criterion,class_names)
+        
+        logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
         
         test_loss = test_loss / len(test_loader.sampler)
         test_acc = test_correct / len(test_loader.sampler) * 100
@@ -274,9 +416,13 @@ if __name__ == '__main__':
             
         
         # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        print(f"Fold:{fold}\nTesting Loss:{test_loss:.2f} \t Testing Acc:{test_acc:.2f}%")
-        # wandb.log({"test_loss" : test_loss,
-        #            "test_acc" : test_acc})
+        # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
+        # wandb.log({"Fold Test": {"test_loss" : test_loss,
+        #                          "test_acc" : test_acc}})
+        
+        logger.add_scalar('Fold/Acc', test_acc, fold)
+        logger.add_scalar('Fold/Loss', test_loss, fold)
+            
         
 # 
 
@@ -284,27 +430,18 @@ if __name__ == '__main__':
     # ======================= Save model if new high accuracy ======================= #
         if test_acc > best_acc:
             print('#'*25)
-            print('# New High Acc: ', test_acc,'#')
+            print('New High Acc: ', test_acc)
             print('#'*25)
             best_acc = test_acc
             best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_aug.pth')
+            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
             
             # Save Scripted Model 
             scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_aug.pth')
-            
-
-
-
-
+            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
 
     end_train = time.time()
     time_elapsed = start_t - end_train
-    writer.close()
-    print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-    # wandb.finish() # called to update the status of each run
-    # wandb.save(glob.glob(f"runs/*.pt.trace.json")[0], base_path=f"runs")
 
-    
+    print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
     
