@@ -14,7 +14,7 @@ wandb/*
 *.pth
 */*.pth
 */*.pt
-
+data/Aug2.0/*
 requirements.txt
 requirements.txt
 src/__pycache__/dataset.cpython-38.pyc
