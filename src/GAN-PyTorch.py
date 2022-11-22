@@ -1,21 +1,9 @@
-import argparse
-import os
-import numpy as np
-import math
+# Consolidated Imports
+from imports import *
 
-import torchvision.transforms as transforms
-from torchvision.utils import save_image
 
-from torch.utils.data import DataLoader
-from torchvision import datasets
-from torch.autograd import Variable
-
-import torch.nn as nn
-import torch.nn.functional as F
-import torch
-
+# Additional Imports
 from dataset import SkinCancer
-# os.makedirs("images", exist_ok=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--n_epochs", type=int, default=5, help="number of epochs of training")

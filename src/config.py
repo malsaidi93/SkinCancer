@@ -5,7 +5,7 @@ def args_parser():
     parser = argparse.ArgumentParser()
 
     # federated arguments (Notation for the arguments followed from paper)
-    parser.add_argument('--epochs', type=int, default=50,
+    parser.add_argument('--epochs', type=int, default=2,
                         help="number of rounds of training")
 
     parser.add_argument('--lr', type=float, default=0.001,
@@ -14,11 +14,8 @@ def args_parser():
     parser.add_argument('--batch', type=int, default=8,
                         help='batch size')
 
-<<<<<<< Updated upstream
     parser.add_argument('--model', type=str, default='efficientnet', help='model name')
-=======
-    parser.add_argument('--model', type=str, default='resnext', help='model name')
->>>>>>> Stashed changes
+
 
     parser.add_argument('--num_classes', type=int, default=7, help="number \
                         of classes")
@@ -34,6 +31,9 @@ def args_parser():
 
     parser.add_argument('--momentum', type=float, default=0.9,
                         help='SGD momentum (default: 0.9)')
+    
+    parser.add_argument('--tensorboard', type=bool, default=True,
+                        help='Log Metrics to TensorBoard')
 
     args = parser.parse_args()
 

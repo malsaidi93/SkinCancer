@@ -1,72 +1,11 @@
+# Consolidated Imports
+from imports import *
 
-import time
-import os, copy, random
-import itertools
-import io
-
-import sys
-import torch
-import torch.nn as nn
-from torch.nn import functional as F
-import torch.optim as optim
-from torch.optim import lr_scheduler
-from torch.utils.data import Dataset, DataLoader, Subset, random_split, SubsetRandomSampler, ConcatDataset
-
-import torchvision
-import torchvision.transforms as transforms
-from torchvision import datasets, models, transforms
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
-from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-
-from config import args_parser
+# Additional Imports
 from models import *
 from dataset import SkinCancer
-
-from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
-# import tensorflow as tf
-
-# import wandb
-
-    
-def plot_confusion_matrix(cm, class_names, save=False):
-    """
-    Returns a matplotlib figure containing the plotted confusion matrix.
-    
-    Args:
-       cm (array, shape = [n, n]): a confusion matrix of integer classes
-       class_names (array, shape = [n]): String names of the integer classes
-    """
-    
-    figure = plt.figure(figsize=(8, 8))
-    plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
-    plt.colorbar()
-    tick_marks = np.arange(len(class_names))
-    plt.xticks(tick_marks, class_names, rotation=45,fontsize=8,horizontalalignment='right')
-    plt.yticks(tick_marks, class_names,fontsize=8)
-    
-    # Normalize the confusion matrix.
-    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
-    
-    # Use white text if squares are dark; otherwise black.
-    threshold = cm.max() / 2.
-    
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        color = "white" if cm[i, j] > threshold else "black"
-        plt.text(j, i, cm[i, j], horizontalalignment="center", color=color,fontsize=7)
-        
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
-    if save:
-        plt.savefig(f'../runs/{args.model}_{args.epochs}_lr-{args.lr}', format='png')
-    return figure
-
+from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter(log_dir='../log')
     
 def train_epoch(model,device,dataloader,loss_fn,optimizer):
     train_loss,train_correct=0.0,0
@@ -142,10 +81,11 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
 
     cf_matrix = confusion_matrix(y_true, y_pred)
     f1 = f1_score(y_true, y_pred, average='weighted')
-    area_auc = roc_auc_score(y_true, y_pred, average='weighted')
+    # area_auc = roc_auc_score(y_true, y_pred, average='weighted')
     
     try:
         plot_confusion_matrix(cf_matrix, class_names, save=True)
+        writer.add_figure(plot_confusion_matrix)
     except:
         print(f'Test_Inference :: plot_confusion_matrix >>>> Error During plotting Confusion Matrix <<<<')
     
@@ -202,10 +142,10 @@ if __name__ == '__main__':
 
     
 
-    dataset = SkinCancer(data_dir, '../data/Aug2.0_train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/minority_train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/Aug2.0_test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/minority_test.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
@@ -263,6 +203,8 @@ if __name__ == '__main__':
 
     class_names = dataset.classes
     
+    writer = SummaryWriter(log_dir=f'../log/{model._get_name()}')
+    
     # ======================= Start ======================= #
     start_t = time.time() 
         
@@ -302,7 +244,14 @@ if __name__ == '__main__':
 
             # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss,train_acc,  val_acc))
             print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss:.2f} \t Validation Loss: {val_loss:.2f}\nAVG Training Acc: {train_acc:.2f}% \t Validation Acc: {val_acc:.2f}%")
-
+            
+            if args.tensorboard:
+                writer.add_scalar('Training Loss', train_loss)
+                writer.add_scalar('Validation Loss', val_loss)
+                writer.add_scalar('Training Accuracy', train_acc)
+                writer.add_scalar('Validation Accuracu', val_acc)
+                # plot_confusion_matrix(cf_matrix, class_names, save=False)
+                # writer.add_figure(plot_confusion_matrix)
     # ======================= Save per Epoch ======================= #
 
 
@@ -352,7 +301,7 @@ if __name__ == '__main__':
 
     end_train = time.time()
     time_elapsed = start_t - end_train
-    
+    writer.close()
     print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
     # wandb.finish() # called to update the status of each run
     # wandb.save(glob.glob(f"runs/*.pt.trace.json")[0], base_path=f"runs")
