@@ -30,10 +30,10 @@ from dataset import SkinCancer
 from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
 # import tensorflow as tf
 
-import wandb
+# import wandb
 
     
-def plot_confusion_matrix(cm, class_names):
+def plot_confusion_matrix(cm, class_names, save=False):
     """
     Returns a matplotlib figure containing the plotted confusion matrix.
     
@@ -63,6 +63,8 @@ def plot_confusion_matrix(cm, class_names):
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+    if save:
+        plt.savefig(f'../runs/{args.model}_{args.epochs}_lr-{args.lr}', format='png')
     return figure
 
     
@@ -142,8 +144,13 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
     f1 = f1_score(y_true, y_pred, average='weighted')
     area_auc = roc_auc_score(y_true, y_pred, average='weighted')
     
+    try:
+        plot_confusion_matrix(cf_matrix, class_names, save=True)
+    except:
+        print(f'Test_Inference :: plot_confusion_matrix >>>> Error During plotting Confusion Matrix <<<<')
+    
     print(f"F1_score: {f1}")
-    wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
+    # wandb.log({"testing_conf_mat": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
     
 
     return valid_loss,val_correct
@@ -152,7 +159,7 @@ if __name__ == '__main__':
     
     
     args = args_parser()
-    wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
+    # wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
     # wandb.Api(api_key="7a2f300a61c6b3c4852452a09526c40098020be2")
 
     
@@ -172,17 +179,17 @@ if __name__ == '__main__':
 # ======================= Logger ======================= #      
     # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
     
-    wandb.init(
-    # Set the project where this run will be logged
-    project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
-    # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-    # Track hyperparameters and run metadata
-    config = {
-    "learning_rate": args.lr,
-    "architecture": args.model,
-    "dataset": "Skin Cancer",
-    "epochs": args.epochs
-    })
+#     wandb.init(
+#     # Set the project where this run will be logged
+#     project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
+#     # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+#     # Track hyperparameters and run metadata
+#     config = {
+#     "learning_rate": args.lr,
+#     "architecture": args.model,
+#     "dataset": "Skin Cancer",
+#     "epochs": args.epochs
+#     })
     
     k=5
     splits=KFold(n_splits=k,shuffle=True,random_state=42)
@@ -190,15 +197,15 @@ if __name__ == '__main__':
     
 # ======================= DATA ======================= #
     
-    data_dir = '../data/Combined_data/'
+    data_dir = '../data/Aug2.0/'
 
 
     
 
-    dataset = SkinCancer(data_dir, '../data/Meta_Train_Aug.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/Aug2.0_train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/Meta_Test_Aug.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/Aug2.0_test.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
@@ -264,8 +271,8 @@ if __name__ == '__main__':
     for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         print('Fold {}'.format(fold))
-        print('Model {}'.format(model._get_name()))
-        print('Wandb Run Name: {}'.format(wandb.run.name))
+        print('Details :: Model: {}, lr: {}, Opt: {}'.format(model._get_name(), args.lr, args.optimizer))
+        # print('Wandb Run Name: {}'.format(wandb.run.name))
         
         
         # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
@@ -293,17 +300,17 @@ if __name__ == '__main__':
             val_acc = val_correct / len(val_loader.sampler) * 100
 
 
-            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
-            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
+            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss,train_acc,  val_acc))
+            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss:.2f} \t Validation Loss: {val_loss:.2f}\nAVG Training Acc: {train_acc:.2f}% \t Validation Acc: {val_acc:.2f}%")
 
     # ======================= Save per Epoch ======================= #
 
 
 
-            wandb.log({"train_loss" : train_loss,
-                   "train_acc" : train_acc , 
-                   "val_loss" : val_loss ,
-                   "val_acc" : val_acc})
+#             wandb.log({"train_loss" : train_loss,
+#                    "train_acc" : train_acc , 
+#                    "val_loss" : val_loss ,
+#                    "val_acc" : val_acc})
             
         
         
@@ -318,9 +325,9 @@ if __name__ == '__main__':
             
         
         # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
-        wandb.log({"test_loss" : test_loss,
-                   "test_acc" : test_acc})
+        print(f"Fold:{fold}\nTesting Loss:{test_loss:.2f} \t Testing Acc:{test_acc:.2f}%")
+        # wandb.log({"test_loss" : test_loss,
+        #            "test_acc" : test_acc})
         
 # 
 
@@ -328,7 +335,7 @@ if __name__ == '__main__':
     # ======================= Save model if new high accuracy ======================= #
         if test_acc > best_acc:
             print('#'*25)
-            print('New High Acc: ', test_acc)
+            print('# New High Acc: ', test_acc,'#')
             print('#'*25)
             best_acc = test_acc
             best_model_wts = copy.deepcopy(model.state_dict())
@@ -345,9 +352,10 @@ if __name__ == '__main__':
 
     end_train = time.time()
     time_elapsed = start_t - end_train
-
+    
     print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-
+    # wandb.finish() # called to update the status of each run
+    # wandb.save(glob.glob(f"runs/*.pt.trace.json")[0], base_path=f"runs")
 
     
     

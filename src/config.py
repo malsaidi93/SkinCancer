@@ -11,10 +11,14 @@ def args_parser():
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate')
 
-    parser.add_argument('--batch', type=int, default=16,
+    parser.add_argument('--batch', type=int, default=8,
                         help='batch size')
 
+<<<<<<< Updated upstream
     parser.add_argument('--model', type=str, default='efficientnet', help='model name')
+=======
+    parser.add_argument('--model', type=str, default='resnext', help='model name')
+>>>>>>> Stashed changes
 
     parser.add_argument('--num_classes', type=int, default=7, help="number \
                         of classes")
