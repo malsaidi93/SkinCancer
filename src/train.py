@@ -173,21 +173,25 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
         
 
     cf_matrix = confusion_matrix(y_true, y_pred)
+    
     cf_figure = plot_confusion_matrix(cf_matrix, class_names)
     
-    f_l = [f1_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    p_l = [precision_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    r_l = [recall_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
+#     f_l = [f1_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+#     p_l = [precision_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+#     r_l = [recall_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
+#     # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
     
-    f1_s = sum(f_l)/len(f_l)
-    # print('f1:', f1_s)
-    p_s = sum(p_l)/len(p_l)
-    r_s = sum(r_l)/len(r_l)
+#     f1_s = sum(f_l)/len(f_l)
+#     # print('f1:', f1_s)
+#     p_s = sum(p_l)/len(p_l)
+#     r_s = sum(r_l)/len(r_l)
     
-#     df = {'F1_Score' : f1_s,
-#           'Precision' : p_s, 
-#           'Recall' : r_s}
+    
+    
+    # m_dict = pd.DataFrame({'F1_Score' : f1_s,
+    #       'Precision' : p_s, 
+    #       'Recall' : r_s})
+    
     
     # metrics_table.add_data(f1_s,p_s,r_s)
     
@@ -197,7 +201,7 @@ def test_inference(model,device,dataloader,loss_fn,class_names):
 #     wandb.log({"Metrics-Table": wandb.Table(columns=['F1_Score','Precision','Recall'], data=[[f1_s, p_s, r_s]])})
     
 
-    return test_loss,test_correct, cf_figure
+    return test_loss,test_correct, cf_figure, cf_matrix
 
 if __name__ == '__main__':
     
@@ -227,8 +231,7 @@ if __name__ == '__main__':
     
     
     
-    k=2
-    splits=KFold(n_splits=k,shuffle=True,random_state=42)
+
     
     
 # ======================= DATA ======================= #
@@ -306,7 +309,7 @@ if __name__ == '__main__':
 
         if args.logger == 'tb':
 
-            logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/original')
+            logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/{args.modality}')
 
         elif args.logger == 'wb':
             wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
@@ -331,6 +334,8 @@ if __name__ == '__main__':
         best_acc = 0.0
 
         step = 0
+        k=5
+        splits=KFold(n_splits=k,shuffle=True,random_state=42)
 
         for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
@@ -358,7 +363,7 @@ if __name__ == '__main__':
                 step+=1
                 train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
                 val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
-                test_loss_epoch, test_acc_epoch, cf_figure = test_inference(model,device,test_loader,criterion,class_names)
+                test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model,device,test_loader,criterion,class_names)
                 logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
 
                 train_loss = train_loss / len(train_loader.sampler)
@@ -396,11 +401,11 @@ if __name__ == '__main__':
                     print('#'*25)
                     best_acc = test_acc_epoch
                     best_model_wts = copy.deepcopy(model.state_dict())
-                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
+                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}.pth')
 
                     # Save Scripted Model 
                     scripted_model = torch.jit.script(model)
-                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
+                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}.pt')
 
 
 
@@ -408,12 +413,14 @@ if __name__ == '__main__':
 
         # ======================= Test Model on HOS ======================= #
 
-            test_loss, test_correct, cf_figure_fold = test_inference(model,device,test_loader,criterion,class_names)
+            test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model,device,test_loader,criterion,class_names)
 
             logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
 
             test_loss = test_loss / len(test_loader.sampler)
             test_acc = test_correct / len(test_loader.sampler) * 100
+            
+            np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_Fold{fold}.npy', cf_matrix)
 
 
 
@@ -437,11 +444,11 @@ if __name__ == '__main__':
                 print('#'*25)
                 best_acc = test_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
-                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
+                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}.pth')
 
                 # Save Scripted Model 
                 scripted_model = torch.jit.script(model)
-                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
+                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}.pt')
 
         end_train = time.time()
         time_elapsed = start_t - end_train
