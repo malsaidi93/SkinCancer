@@ -21,4 +21,5 @@ requirements.txt
 src/__pycache__/*
 src/*.png
 save/*
-
+log/*
+models/*

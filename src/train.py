@@ -57,7 +57,7 @@ def plot_confusion_matrix(cm, class_names):
     plt.yticks(tick_marks, class_names,fontsize=8)
     
     # Normalize the confusion matrix.
-    cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    # cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
     
     # Use white text if squares are dark; otherwise black.
     threshold = cm.max() / 2.
@@ -213,7 +213,7 @@ if __name__ == '__main__':
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available(): # device is windows with cuda
             print(f'"<----------Using CUDA--------->')
-            device = 'cuda'
+            device = args.device
         else:
             print(f'"<----------Using CPU--------->')
             device = 'cpu'
@@ -227,21 +227,21 @@ if __name__ == '__main__':
     
     
     
-    k=5
+    k=2
     splits=KFold(n_splits=k,shuffle=True,random_state=42)
     
     
 # ======================= DATA ======================= #
     
-    data_dir = '../data/Combined_data/'
+    data_dir = '../data/combined_data/'
 
 
     
 
-    dataset = SkinCancer(data_dir, '../data/train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/meta_augment_train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/meta_augment_test.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
@@ -250,148 +250,192 @@ if __name__ == '__main__':
 
 # ======================= Model | Loss Function | Optimizer ======================= # 
 
-    if args.model == 'efficientnet':
-        
-        model = efficientnet()
-        
-    elif args.model == 'resnet':
-        model = resnet()
+    for i in ['efficientnet', 'vit', 'resnet', 'convnext']:
+        args.model = i
+
+        if args.model == 'efficientnet':
+
+            model = efficientnet()
+
+        elif args.model == 'resnet':
+            model = resnet()
+
+        elif args.model == 'vit':
+            model = vit()
+
+        elif args.model == 'convnext':
+            model = convnext()
+
+        elif args.model == 'alexnet':
+            model = alexnet()
+
+        elif args.model == 'cnn':
+            model = cnn()
     
-    elif args.model == 'vit':
-        model = vit()
-        
-    elif args.model == 'convnext':
-        model = convnext()
-    
-    elif args.model == 'alexnet':
-        model = alexnet()
-        
-    elif args.model == 'cnn':
-        model = cnn()
-    
-    # copy weights
-    MODEL_WEIGHTS = copy.deepcopy(model.state_dict())    
+        # copy weights
+        MODEL_WEIGHTS = copy.deepcopy(model.state_dict())    
 
-   # ======================= Set Optimizer and loss Function ======================= #
-    if args.optimizer == 'sgd':
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
-                                    momentum=0.9)
-    elif args.optimizer == 'adamx':
-        optimizer = torch.optim.Adamax(model.parameters(), lr=args.lr)
-    
-    
-    if args.imbalanced:
-    #loss function with class weights
-        # print(model.classifier)
-        class_weights=class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=np.array(dataset.classes_all))
-        class_weights=torch.FloatTensor(class_weights).cuda()
-        # class_weights = class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=self.df['dx'].to_numpy()),device='cuda')
-        criterion = nn.CrossEntropyLoss(weight = class_weights,reduction='mean') 
-        
-    
-    else:
-        criterion = nn.CrossEntropyLoss()
-    
-    batch_size = args.batch
+       # ======================= Set Optimizer and loss Function ======================= #
+        if args.optimizer == 'sgd':
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
+                                        momentum=0.9)
+        elif args.optimizer == 'adamx':
+            optimizer = torch.optim.Adamax(model.parameters(), lr=args.lr)
 
-    class_names = dataset.classes
-    
-    # ======================= Logger ======================= #      
-    # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
-    
 
-    
-    if args.logger == 'tb':
-        
-        logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/Run2')
-        
-    elif args.logger == 'wb':
-        wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
-        logger = wandb.init(
-        # Set the project where this run will be logged
-        project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
-        # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-        # Track hyperparameters and run metadata
-        config = {
-        "learning_rate": args.lr,
-        "architecture": args.model,
-        "dataset": "Skin Cancer",
-        "epochs": args.epochs
-        })
-        
-    else:
-        logger = None
-    
-    # ======================= Start ======================= #
-    start_t = time.time() 
-        
-    best_acc = 0.0
-    
-    step = 0
-    
-    for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
+        if args.imbalanced:
+        #loss function with class weights
+            # print(model.classifier)
+            class_weights=class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=np.array(dataset.classes_all))
+            class_weights=torch.FloatTensor(class_weights).cuda()
+            # class_weights = class_weight.compute_class_weight('balanced',classes=np.unique(dataset.classes),y=self.df['dx'].to_numpy()),device='cuda')
+            criterion = nn.CrossEntropyLoss(weight = class_weights,reduction='mean') 
 
-        print('Fold {}'.format(fold))
-        print('Model {}'.format(model._get_name()))
-        # print('Wandb Run Name: {}'.format(wandb.run.name))
-        
-        
-        # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
-        
-        
-        model.to(device)
 
-        train_sampler = SubsetRandomSampler(train_idx)
-        test_sampler = SubsetRandomSampler(val_idx)
+        else:
+            criterion = nn.CrossEntropyLoss()
 
-        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler) # train, will change for each fold
-        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler) # validation 
-        test_loader = DataLoader(test_dataset, batch_size=batch_size) # hold out set, test once at the end of each fold
+        batch_size = args.batch
+
+        class_names = dataset.classes
+
+        # ======================= Logger ======================= #      
+        # wandb.login('relogin'=='allow',key="7591f651690491f93838963333fd6757dbd71440")
 
 
 
-    # ======================= Train per fold ======================= #
-        for epoch in range(args.epochs):
-            step+=1
-            train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
-            val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
-            test_loss_epoch, test_acc_epoch, cf_figure = test_inference(model,device,test_loader,criterion,class_names)
-            logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
+        if args.logger == 'tb':
 
-            train_loss = train_loss / len(train_loader.sampler)
-            train_acc = train_correct / len(train_loader.sampler) * 100
-            val_loss = val_loss / len(val_loader.sampler)
-            val_acc = val_correct / len(val_loader.sampler) * 100
-            
-            print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
-            
-            
-            test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
-            test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
+            logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/original')
+
+        elif args.logger == 'wb':
+            wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
+            logger = wandb.init(
+            # Set the project where this run will be logged
+            project = "SkinCancer_Augmented_CV_UpdateWeights", entity="fau-computer-vision", 
+            # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
+            # Track hyperparameters and run metadata
+            config = {
+            "learning_rate": args.lr,
+            "architecture": args.model,
+            "dataset": "Skin Cancer",
+            "epochs": args.epochs
+            })
+
+        else:
+            logger = None
+
+        # ======================= Start ======================= #
+        start_t = time.time() 
+
+        best_acc = 0.0
+
+        step = 0
+
+        for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
+
+            print('Fold {}'.format(fold))
+            print('Model {}'.format(model._get_name()))
+            # print('Wandb Run Name: {}'.format(wandb.run.name))
 
 
-            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
-            
-            
+            # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
 
-    # ======================= Save per Epoch ======================= #
 
-            logger.add_scalars('Loss', {'train':train_loss,
-                                    'val':val_loss,
-                                    'test':test_loss_epoch}, step)
-        
-            logger.add_scalars('Acc', {'train':train_acc,
-                                    'val':val_acc,
-                                    'test':test_acc_epoch}, step)
-        
+            model.to(device)
 
-            
-            # ======================= Save model if new high accuracy ======================= #
-            if test_acc_epoch > best_acc:
+            train_sampler = SubsetRandomSampler(train_idx)
+            test_sampler = SubsetRandomSampler(val_idx)
+
+            train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler) # train, will change for each fold
+            val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler) # validation 
+            test_loader = DataLoader(test_dataset, batch_size=batch_size) # hold out set, test once at the end of each fold
+
+
+
+        # ======================= Train per fold ======================= #
+            for epoch in range(args.epochs):
+                step+=1
+                train_loss, train_correct = train_epoch(model,device,train_loader,criterion,optimizer)
+                val_loss, val_correct = valid_epoch(model,device,val_loader,criterion)
+                test_loss_epoch, test_acc_epoch, cf_figure = test_inference(model,device,test_loader,criterion,class_names)
+                logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
+
+                train_loss = train_loss / len(train_loader.sampler)
+                train_acc = train_correct / len(train_loader.sampler) * 100
+                val_loss = val_loss / len(val_loader.sampler)
+                val_acc = val_correct / len(val_loader.sampler) * 100
+
+                print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Testing Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Testing Acc {val_acc}")
+
+
+                test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
+                test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
+
+
+                # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+
+
+
+        # ======================= Save per Epoch ======================= #
+
+                logger.add_scalars('Loss', {'train':train_loss,
+                                        'val':val_loss,
+                                        'test':test_loss_epoch}, step)
+
+                logger.add_scalars('Acc', {'train':train_acc,
+                                        'val':val_acc,
+                                        'test':test_acc_epoch}, step)
+
+
+
+                # ======================= Save model if new high accuracy ======================= #
+                if test_acc_epoch > best_acc:
+                    print('#'*25)
+                    print('New High Acc: ', test_acc_epoch)
+                    print('#'*25)
+                    best_acc = test_acc_epoch
+                    best_model_wts = copy.deepcopy(model.state_dict())
+                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
+
+                    # Save Scripted Model 
+                    scripted_model = torch.jit.script(model)
+                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
+
+
+
+
+
+        # ======================= Test Model on HOS ======================= #
+
+            test_loss, test_correct, cf_figure_fold = test_inference(model,device,test_loader,criterion,class_names)
+
+            logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
+
+            test_loss = test_loss / len(test_loader.sampler)
+            test_acc = test_correct / len(test_loader.sampler) * 100
+
+
+
+
+            # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+            # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
+            # wandb.log({"Fold Test": {"test_loss" : test_loss,
+            #                          "test_acc" : test_acc}})
+
+            logger.add_scalar('Fold/Acc', test_acc, fold)
+            logger.add_scalar('Fold/Loss', test_loss, fold)
+
+
+    # 
+
+
+        # ======================= Save model if new high accuracy ======================= #
+            if test_acc > best_acc:
                 print('#'*25)
-                print('New High Acc: ', test_acc_epoch)
+                print('New High Acc: ', test_acc)
                 print('#'*25)
-                best_acc = test_acc_epoch
+                best_acc = test_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
                 torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
 
@@ -399,49 +443,7 @@ if __name__ == '__main__':
                 scripted_model = torch.jit.script(model)
                 torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
 
+        end_train = time.time()
+        time_elapsed = start_t - end_train
 
-            
-        
-        
-    # ======================= Test Model on HOS ======================= #
-
-        test_loss, test_correct, cf_figure_fold = test_inference(model,device,test_loader,criterion,class_names)
-        
-        logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
-        
-        test_loss = test_loss / len(test_loader.sampler)
-        test_acc = test_correct / len(test_loader.sampler) * 100
-        
-        
-            
-        
-        # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
-        # wandb.log({"Fold Test": {"test_loss" : test_loss,
-        #                          "test_acc" : test_acc}})
-        
-        logger.add_scalar('Fold/Acc', test_acc, fold)
-        logger.add_scalar('Fold/Loss', test_loss, fold)
-            
-        
-# 
-
-    
-    # ======================= Save model if new high accuracy ======================= #
-        if test_acc > best_acc:
-            print('#'*25)
-            print('New High Acc: ', test_acc)
-            print('#'*25)
-            best_acc = test_acc
-            best_model_wts = copy.deepcopy(model.state_dict())
-            torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.optimizer}_original.pth')
-            
-            # Save Scripted Model 
-            scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.optimizer}_original.pth')
-
-    end_train = time.time()
-    time_elapsed = start_t - end_train
-
-    print(f'Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
-    
+        print(f'{model._get_name()} Training completed in {time_elapsed // 60:.0f}m {time_elapsed % 60:.0f}s')
