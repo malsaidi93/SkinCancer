@@ -250,6 +250,7 @@ if __name__ == '__main__':
     
     # print(classes)
     # sys.exit()
+    
 
 # ======================= Model | Loss Function | Optimizer ======================= # 
 
@@ -309,7 +310,7 @@ if __name__ == '__main__':
 
         if args.logger == 'tb':
 
-            logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/{args.modality}')
+            logger = SummaryWriter(log_dir = f'../tb_logs/{model._get_name()}/{args.modality}_{args.epochs}Epochs')
 
         elif args.logger == 'wb':
             wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
@@ -401,11 +402,11 @@ if __name__ == '__main__':
                     print('#'*25)
                     best_acc = test_acc_epoch
                     best_model_wts = copy.deepcopy(model.state_dict())
-                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}.pth')
+                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
 
                     # Save Scripted Model 
                     scripted_model = torch.jit.script(model)
-                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}.pt')
+                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
 
 
 
@@ -444,11 +445,11 @@ if __name__ == '__main__':
                 print('#'*25)
                 best_acc = test_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
-                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}.pth')
+                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
 
                 # Save Scripted Model 
                 scripted_model = torch.jit.script(model)
-                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}.pt')
+                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
 
         end_train = time.time()
         time_elapsed = start_t - end_train
