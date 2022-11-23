@@ -12,9 +12,6 @@ data/Augmented_rename
 src/wandb/*
 wandb/*
 **/__pycache__/ 
-*.pth
-*/*.pth
-*/*.pt
 data/Aug2.0/*
 requirements.txt
 requirements.txt
