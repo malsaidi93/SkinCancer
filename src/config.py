@@ -16,6 +16,8 @@ def args_parser():
                         help='batch size')
 
     parser.add_argument('--model', type=str, default='vit', help='model name')
+    
+    parser.add_argument('--finetune', type=bool, default=True, help='finetune by adding layers')
 
 
     parser.add_argument('--num_classes', type=int, default=7, help="number \

@@ -241,10 +241,10 @@ if __name__ == '__main__':
 
     
 
-    dataset = SkinCancer(data_dir, '../data/meta_augment_train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../data/train.csv', transform=None)
     dataset_size = len(dataset)
     
-    test_dataset = SkinCancer(data_dir, '../data/meta_augment_test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
     
     classes=np.unique(dataset.classes)
     
@@ -254,12 +254,26 @@ if __name__ == '__main__':
 
 # ======================= Model | Loss Function | Optimizer ======================= # 
 
-    for i in ['efficientnet', 'vit', 'resnet', 'convnext']:
+    for i in ['vit', 'resnet']:  #, 'convnext'
         args.model = i
 
         if args.model == 'efficientnet':
 
             model = efficientnet()
+            
+            if args.finetune:
+                model.classifier = nn.Sequential(
+                nn.BatchNorm1d(num_features=1280),    
+                nn.Linear(num_features, 512),
+                nn.ReLU(),
+                nn.BatchNorm1d(512),
+                nn.Linear(512, num_features),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=1280),
+                nn.Dropout(0.4),
+                nn.Linear(1280, 7),
+                )
+            
 
         elif args.model == 'resnet':
             model = resnet()
@@ -337,6 +351,10 @@ if __name__ == '__main__':
         step = 0
         k=5
         splits=KFold(n_splits=k,shuffle=True,random_state=42)
+        
+        
+        
+        args.finetune = 'finetune' if args.finetune else 'transfer'
 
         for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
@@ -402,11 +420,11 @@ if __name__ == '__main__':
                     print('#'*25)
                     best_acc = test_acc_epoch
                     best_model_wts = copy.deepcopy(model.state_dict())
-                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
+                    torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
 
                     # Save Scripted Model 
                     scripted_model = torch.jit.script(model)
-                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
+                    torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
 
 
 
@@ -421,7 +439,7 @@ if __name__ == '__main__':
             test_loss = test_loss / len(test_loader.sampler)
             test_acc = test_correct / len(test_loader.sampler) * 100
             
-            np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_Fold{fold}.npy', cf_matrix)
+            np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy', cf_matrix)
 
 
 
@@ -445,11 +463,11 @@ if __name__ == '__main__':
                 print('#'*25)
                 best_acc = test_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
-                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
+                torch.save(model.state_dict(), f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
 
                 # Save Scripted Model 
                 scripted_model = torch.jit.script(model)
-                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
+                torch.jit.save(scripted_model, f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
 
         end_train = time.time()
         time_elapsed = start_t - end_train

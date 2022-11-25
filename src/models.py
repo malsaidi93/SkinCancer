@@ -3,6 +3,10 @@ import torch.nn as nn
 from torchvision import models
 
 
+# from config import args_parser
+
+# args=args_parser()
+
 class cnn():
     pass
 
@@ -14,7 +18,22 @@ def efficientnet():
     new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
     model.classifier.__setitem__(-1 , new_fc)
     
-    
+
+    # if args.finetune:
+    #     model.classifier = nn.Sequential(
+    #     nn.BatchNorm1d(num_features=old_fc.in_features),    
+    #     nn.Linear(num_features, 512),
+    #     nn.ReLU(),
+    #     nn.BatchNorm1d(512),
+    #     nn.Linear(512, num_features),
+    #     nn.ReLU(),
+    #     nn.BatchNorm1d(num_features=1280),
+    #     nn.Dropout(0.4),
+    #     nn.Linear(1280, old_fc.out_features),
+    #     )
+        
+    # else:
+        
 
     # model.classifier[1].out_features = 7
 
@@ -68,3 +87,8 @@ def resnext():
 
 
 
+# if __name__ == '__main__':
+    
+    
+#     if args.model =='efficientnet':
+#         model = efficientnet(args)
