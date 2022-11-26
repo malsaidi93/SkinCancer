@@ -37,7 +37,7 @@ class SkinCancer(Dataset):
             self.image_paths = self.df['image_path'].to_list()
             
         self.image_ids = self.df['image_id'].to_list()
-        self.classes = self.df['dx'].unique().tolist()
+        self.classes = sorted(self.df['dx'].unique().tolist())
         self.classes_all = self.df['dx'].tolist()
 
         

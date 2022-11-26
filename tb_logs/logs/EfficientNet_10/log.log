@@ -1,0 +1,3 @@
+2022-11-26 13:39:39,415 INFO  __main__        - Log file is ../tb_logs/logs/EfficientNet_10//log.log
+2022-11-26 13:39:39,415 INFO  __main__        - Device: cuda:0
+2022-11-26 13:39:39,415 INFO  __main__        - Fold: 0, Model: EfficientNet
