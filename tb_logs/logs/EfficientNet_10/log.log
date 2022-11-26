@@ -1,3 +1,270 @@
 2022-11-26 13:39:39,415 INFO  __main__        - Log file is ../tb_logs/logs/EfficientNet_10//log.log
 2022-11-26 13:39:39,415 INFO  __main__        - Device: cuda:0
 2022-11-26 13:39:39,415 INFO  __main__        - Fold: 0, Model: EfficientNet
+2022-11-26 13:45:26,090 INFO  __main__        - Epoch: 0/10
+2022-11-26 13:45:26,121 INFO  __main__        - Average Training Loss: 0.7235013421053521
+2022-11-26 13:45:26,121 INFO  __main__        - Average Validation Loss: 0.5745669635325317
+2022-11-26 13:45:26,121 INFO  __main__        - Average Training Acc: 74.31736620377593
+2022-11-26 13:45:26,121 INFO  __main__        - Average Validation acc: 79.97504678727387
+2022-11-26 13:45:26,137 INFO  __main__        - New High Acc: <<<<< 80.47928107838243 >>>>>
+2022-11-26 13:48:55,611 INFO  __main__        - Epoch: 1/10
+2022-11-26 13:48:55,627 INFO  __main__        - Average Training Loss: 0.5123684630181566
+2022-11-26 13:48:55,627 INFO  __main__        - Average Validation Loss: 0.5088060826658087
+2022-11-26 13:48:55,627 INFO  __main__        - Average Training Acc: 81.68200967389609
+2022-11-26 13:48:55,627 INFO  __main__        - Average Validation acc: 83.28134747348722
+2022-11-26 13:48:55,627 INFO  __main__        - New High Acc: <<<<< 83.92411382925611 >>>>>
+2022-11-26 13:54:28,793 INFO  __main__        - Epoch: 2/10
+2022-11-26 13:54:28,793 INFO  __main__        - Average Training Loss: 0.37317235855814923
+2022-11-26 13:54:28,793 INFO  __main__        - Average Validation Loss: 0.46273847875264906
+2022-11-26 13:54:28,793 INFO  __main__        - Average Training Acc: 86.89343111249805
+2022-11-26 13:54:28,793 INFO  __main__        - Average Validation acc: 85.40237055520899
+2022-11-26 13:59:43,127 INFO  __main__        - Epoch: 3/10
+2022-11-26 13:59:43,143 INFO  __main__        - Average Training Loss: 0.2542970343709444
+2022-11-26 13:59:43,143 INFO  __main__        - Average Validation Loss: 0.5817236495596436
+2022-11-26 13:59:43,143 INFO  __main__        - Average Training Acc: 91.27789046653145
+2022-11-26 13:59:43,143 INFO  __main__        - Average Validation acc: 84.77854023705552
+2022-11-26 13:59:43,143 INFO  __main__        - New High Acc: <<<<< 84.92261607588617 >>>>>
+2022-11-26 14:12:11,811 INFO  __main__        - Epoch: 4/10
+2022-11-26 14:12:11,826 INFO  __main__        - Average Training Loss: 0.20457029077190284
+2022-11-26 14:12:11,826 INFO  __main__        - Average Validation Loss: 0.557717909889161
+2022-11-26 14:12:11,826 INFO  __main__        - Average Training Acc: 93.13465439226088
+2022-11-26 14:12:11,826 INFO  __main__        - Average Validation acc: 85.1528384279476
+2022-11-26 14:12:11,826 INFO  __main__        - New High Acc: <<<<< 85.72141787319022 >>>>>
+2022-11-26 14:15:33,991 INFO  __main__        - Epoch: 5/10
+2022-11-26 14:15:34,006 INFO  __main__        - Average Training Loss: 0.13500875340102428
+2022-11-26 14:15:34,006 INFO  __main__        - Average Validation Loss: 0.5216689177514314
+2022-11-26 14:15:34,006 INFO  __main__        - Average Training Acc: 95.66234982056483
+2022-11-26 14:15:34,006 INFO  __main__        - Average Validation acc: 86.46288209606988
+2022-11-26 14:20:04,291 INFO  __main__        - Epoch: 6/10
+2022-11-26 14:20:04,306 INFO  __main__        - Average Training Loss: 0.11884565585353037
+2022-11-26 14:20:04,306 INFO  __main__        - Average Validation Loss: 0.5489298858268347
+2022-11-26 14:20:04,306 INFO  __main__        - Average Training Acc: 96.19285379934468
+2022-11-26 14:20:04,306 INFO  __main__        - Average Validation acc: 85.9638178415471
+2022-11-26 14:20:04,306 INFO  __main__        - New High Acc: <<<<< 86.47029455816275 >>>>>
+2022-11-26 14:23:08,667 INFO  __main__        - Epoch: 7/10
+2022-11-26 14:23:08,667 INFO  __main__        - Average Training Loss: 0.08947503738700216
+2022-11-26 14:23:08,683 INFO  __main__        - Average Validation Loss: 0.5666360279670779
+2022-11-26 14:23:08,683 INFO  __main__        - Average Training Acc: 97.06662505851146
+2022-11-26 14:23:08,683 INFO  __main__        - Average Validation acc: 86.46288209606988
+2022-11-26 14:25:49,664 INFO  __main__        - Epoch: 8/10
+2022-11-26 14:25:49,679 INFO  __main__        - Average Training Loss: 0.06747695495727925
+2022-11-26 14:25:49,679 INFO  __main__        - Average Validation Loss: 0.5756493446229639
+2022-11-26 14:25:49,679 INFO  __main__        - Average Training Acc: 97.84677796848183
+2022-11-26 14:25:49,679 INFO  __main__        - Average Validation acc: 85.65190268247036
+2022-11-26 14:28:12,383 INFO  __main__        - Epoch: 9/10
+2022-11-26 14:28:12,383 INFO  __main__        - Average Training Loss: 0.0582773770869885
+2022-11-26 14:28:12,383 INFO  __main__        - Average Validation Loss: 0.6302013645358452
+2022-11-26 14:28:12,383 INFO  __main__        - Average Training Acc: 98.08082384147293
+2022-11-26 14:28:12,383 INFO  __main__        - Average Validation acc: 86.8995633187773
+2022-11-26 14:28:37,062 INFO  __main__        - Fold: 1, Model: EfficientNet
+2022-11-26 14:30:58,554 INFO  __main__        - Epoch: 0/10
+2022-11-26 14:30:58,554 INFO  __main__        - Average Training Loss: 0.20705097476286383
+2022-11-26 14:30:58,554 INFO  __main__        - Average Validation Loss: 0.027502081607856527
+2022-11-26 14:30:58,554 INFO  __main__        - Average Training Acc: 93.72757060383834
+2022-11-26 14:30:58,554 INFO  __main__        - Average Validation acc: 99.25140361821585
+2022-11-26 14:30:58,554 INFO  __main__        - New High Acc: <<<<< 86.62006989515726 >>>>>
+2022-11-26 14:33:23,511 INFO  __main__        - Epoch: 1/10
+2022-11-26 14:33:23,526 INFO  __main__        - Average Training Loss: 0.10324116489390209
+2022-11-26 14:33:23,526 INFO  __main__        - Average Validation Loss: 0.037076729138594056
+2022-11-26 14:33:23,526 INFO  __main__        - Average Training Acc: 96.80137306912154
+2022-11-26 14:33:23,526 INFO  __main__        - Average Validation acc: 98.81472239550843
+2022-11-26 14:35:45,015 INFO  __main__        - Epoch: 2/10
+2022-11-26 14:35:45,015 INFO  __main__        - Average Training Loss: 0.08075916233462645
+2022-11-26 14:35:45,015 INFO  __main__        - Average Validation Loss: 0.051393755237697014
+2022-11-26 14:35:45,015 INFO  __main__        - Average Training Acc: 97.22265564050554
+2022-11-26 14:35:45,015 INFO  __main__        - Average Validation acc: 98.56519026824704
+2022-11-26 14:38:54,918 INFO  __main__        - Epoch: 3/10
+2022-11-26 14:38:54,934 INFO  __main__        - Average Training Loss: 0.05407297499539043
+2022-11-26 14:38:54,934 INFO  __main__        - Average Validation Loss: 0.06323275667774934
+2022-11-26 14:38:54,934 INFO  __main__        - Average Training Acc: 98.20564830706819
+2022-11-26 14:38:54,934 INFO  __main__        - Average Validation acc: 98.50280723643169
+2022-11-26 14:41:26,444 INFO  __main__        - Epoch: 4/10
+2022-11-26 14:41:26,460 INFO  __main__        - Average Training Loss: 0.03601231639293664
+2022-11-26 14:41:26,460 INFO  __main__        - Average Validation Loss: 0.06188506496997832
+2022-11-26 14:41:26,460 INFO  __main__        - Average Training Acc: 98.65813699485099
+2022-11-26 14:41:26,460 INFO  __main__        - Average Validation acc: 98.12850904553962
+2022-11-26 14:41:26,460 INFO  __main__        - New High Acc: <<<<< 87.06939590614078 >>>>>
+2022-11-26 14:43:50,497 INFO  __main__        - Epoch: 5/10
+2022-11-26 14:43:50,497 INFO  __main__        - Average Training Loss: 0.0416465767347608
+2022-11-26 14:43:50,497 INFO  __main__        - Average Validation Loss: 0.06923333155115884
+2022-11-26 14:43:50,497 INFO  __main__        - Average Training Acc: 98.68934311124981
+2022-11-26 14:43:50,512 INFO  __main__        - Average Validation acc: 97.6918278228322
+2022-11-26 14:46:14,448 INFO  __main__        - Epoch: 6/10
+2022-11-26 14:46:14,464 INFO  __main__        - Average Training Loss: 0.03955144204840624
+2022-11-26 14:46:14,464 INFO  __main__        - Average Validation Loss: 0.055128467248868676
+2022-11-26 14:46:14,464 INFO  __main__        - Average Training Acc: 98.58012170385395
+2022-11-26 14:46:14,464 INFO  __main__        - Average Validation acc: 98.06612601372426
+2022-11-26 14:48:37,504 INFO  __main__        - Epoch: 7/10
+2022-11-26 14:48:37,519 INFO  __main__        - Average Training Loss: 0.03554238839067363
+2022-11-26 14:48:37,519 INFO  __main__        - Average Validation Loss: 0.08140100360195106
+2022-11-26 14:48:37,519 INFO  __main__        - Average Training Acc: 98.78296146044624
+2022-11-26 14:48:37,519 INFO  __main__        - Average Validation acc: 97.6918278228322
+2022-11-26 14:50:59,221 INFO  __main__        - Epoch: 8/10
+2022-11-26 14:50:59,221 INFO  __main__        - Average Training Loss: 0.032086462256427487
+2022-11-26 14:50:59,221 INFO  __main__        - Average Validation Loss: 0.05987817059210681
+2022-11-26 14:50:59,221 INFO  __main__        - Average Training Acc: 98.97019815883912
+2022-11-26 14:50:59,221 INFO  __main__        - Average Validation acc: 97.75421085464754
+2022-11-26 14:54:09,566 INFO  __main__        - Epoch: 9/10
+2022-11-26 14:54:09,574 INFO  __main__        - Average Training Loss: 0.036436436301776114
+2022-11-26 14:54:09,576 INFO  __main__        - Average Validation Loss: 0.08449475788919253
+2022-11-26 14:54:09,576 INFO  __main__        - Average Training Acc: 98.92338898424092
+2022-11-26 14:54:09,576 INFO  __main__        - Average Validation acc: 97.37991266375546
+2022-11-26 14:54:33,578 INFO  __main__        - Fold: 2, Model: EfficientNet
+2022-11-26 14:56:39,344 INFO  __main__        - Epoch: 0/10
+2022-11-26 14:56:39,344 INFO  __main__        - Average Training Loss: 0.04436619807887959
+2022-11-26 14:56:39,344 INFO  __main__        - Average Validation Loss: 0.01101899966301608
+2022-11-26 14:56:39,344 INFO  __main__        - Average Training Acc: 98.5179407176287
+2022-11-26 14:56:39,344 INFO  __main__        - Average Validation acc: 99.87515605493134
+2022-11-26 14:59:02,900 INFO  __main__        - Epoch: 1/10
+2022-11-26 14:59:02,900 INFO  __main__        - Average Training Loss: 0.04252947560291798
+2022-11-26 14:59:02,900 INFO  __main__        - Average Validation Loss: 0.01246825690144577
+2022-11-26 14:59:02,900 INFO  __main__        - Average Training Acc: 98.59594383775351
+2022-11-26 14:59:02,900 INFO  __main__        - Average Validation acc: 99.75031210986268
+2022-11-26 15:01:24,476 INFO  __main__        - Epoch: 2/10
+2022-11-26 15:01:24,492 INFO  __main__        - Average Training Loss: 0.031749222945954426
+2022-11-26 15:01:24,492 INFO  __main__        - Average Validation Loss: 0.018438891307994323
+2022-11-26 15:01:24,492 INFO  __main__        - Average Training Acc: 98.93915756630265
+2022-11-26 15:01:24,492 INFO  __main__        - Average Validation acc: 99.50062421972534
+2022-11-26 15:03:48,022 INFO  __main__        - Epoch: 3/10
+2022-11-26 15:03:48,022 INFO  __main__        - Average Training Loss: 0.029073293314912846
+2022-11-26 15:03:48,022 INFO  __main__        - Average Validation Loss: 0.03945494135271783
+2022-11-26 15:03:48,022 INFO  __main__        - Average Training Acc: 99.11076443057722
+2022-11-26 15:03:48,022 INFO  __main__        - Average Validation acc: 98.93882646691635
+2022-11-26 15:06:10,897 INFO  __main__        - Epoch: 4/10
+2022-11-26 15:06:10,905 INFO  __main__        - Average Training Loss: 0.02978895667451334
+2022-11-26 15:06:10,905 INFO  __main__        - Average Validation Loss: 0.007972212173037344
+2022-11-26 15:06:10,905 INFO  __main__        - Average Training Acc: 99.09516380655226
+2022-11-26 15:06:10,905 INFO  __main__        - Average Validation acc: 99.68789013732834
+2022-11-26 15:06:10,905 INFO  __main__        - New High Acc: <<<<< 87.11932101847229 >>>>>
+2022-11-26 15:09:24,944 INFO  __main__        - Epoch: 5/10
+2022-11-26 15:09:24,959 INFO  __main__        - Average Training Loss: 0.02240909491018317
+2022-11-26 15:09:24,959 INFO  __main__        - Average Validation Loss: 0.008252712895354024
+2022-11-26 15:09:24,959 INFO  __main__        - Average Training Acc: 99.23556942277692
+2022-11-26 15:09:24,959 INFO  __main__        - Average Validation acc: 99.68789013732834
+2022-11-26 15:09:24,959 INFO  __main__        - New High Acc: <<<<< 87.41887169246131 >>>>>
+2022-11-26 15:11:51,631 INFO  __main__        - Epoch: 6/10
+2022-11-26 15:11:51,638 INFO  __main__        - Average Training Loss: 0.023818295248213397
+2022-11-26 15:11:51,638 INFO  __main__        - Average Validation Loss: 0.04807363918887171
+2022-11-26 15:11:51,638 INFO  __main__        - Average Training Acc: 99.21996879875195
+2022-11-26 15:11:51,638 INFO  __main__        - Average Validation acc: 99.37578027465668
+2022-11-26 15:14:15,440 INFO  __main__        - Epoch: 7/10
+2022-11-26 15:14:15,450 INFO  __main__        - Average Training Loss: 0.018367382986056974
+2022-11-26 15:14:15,450 INFO  __main__        - Average Validation Loss: 0.055351140963185705
+2022-11-26 15:14:15,450 INFO  __main__        - Average Training Acc: 99.3603744149766
+2022-11-26 15:14:15,450 INFO  __main__        - Average Validation acc: 99.12609238451935
+2022-11-26 15:16:39,840 INFO  __main__        - Epoch: 8/10
+2022-11-26 15:16:39,855 INFO  __main__        - Average Training Loss: 0.017529487541914805
+2022-11-26 15:16:39,855 INFO  __main__        - Average Validation Loss: 0.011219133122906315
+2022-11-26 15:16:39,855 INFO  __main__        - Average Training Acc: 99.48517940717629
+2022-11-26 15:16:39,855 INFO  __main__        - Average Validation acc: 99.68789013732834
+2022-11-26 15:16:39,855 INFO  __main__        - New High Acc: <<<<< 87.46879680479282 >>>>>
+2022-11-26 15:19:06,140 INFO  __main__        - Epoch: 9/10
+2022-11-26 15:19:06,140 INFO  __main__        - Average Training Loss: 0.021728221123780023
+2022-11-26 15:19:06,140 INFO  __main__        - Average Validation Loss: 0.16257328496486012
+2022-11-26 15:19:06,140 INFO  __main__        - Average Training Acc: 99.3603744149766
+2022-11-26 15:19:06,140 INFO  __main__        - Average Validation acc: 99.06367041198502
+2022-11-26 15:19:31,926 INFO  __main__        - Fold: 3, Model: EfficientNet
+2022-11-26 15:22:13,147 INFO  __main__        - Epoch: 0/10
+2022-11-26 15:22:13,147 INFO  __main__        - Average Training Loss: 0.02739814469146984
+2022-11-26 15:22:13,147 INFO  __main__        - Average Validation Loss: 0.005332125081996602
+2022-11-26 15:22:13,147 INFO  __main__        - Average Training Acc: 99.11076443057722
+2022-11-26 15:22:13,147 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:25:15,456 INFO  __main__        - Epoch: 1/10
+2022-11-26 15:25:15,456 INFO  __main__        - Average Training Loss: 0.023045951564285908
+2022-11-26 15:25:15,456 INFO  __main__        - Average Validation Loss: 0.005663853846059172
+2022-11-26 15:25:15,456 INFO  __main__        - Average Training Acc: 99.43837753510141
+2022-11-26 15:25:15,472 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:27:37,808 INFO  __main__        - Epoch: 2/10
+2022-11-26 15:27:37,808 INFO  __main__        - Average Training Loss: 0.017448157882249397
+2022-11-26 15:27:37,823 INFO  __main__        - Average Validation Loss: 0.009614080424729905
+2022-11-26 15:27:37,823 INFO  __main__        - Average Training Acc: 99.32917316692668
+2022-11-26 15:27:37,823 INFO  __main__        - Average Validation acc: 99.68789013732834
+2022-11-26 15:30:01,480 INFO  __main__        - Epoch: 3/10
+2022-11-26 15:30:01,492 INFO  __main__        - Average Training Loss: 0.026135857724894972
+2022-11-26 15:30:01,492 INFO  __main__        - Average Validation Loss: 0.016861392151782364
+2022-11-26 15:30:01,492 INFO  __main__        - Average Training Acc: 99.18876755070202
+2022-11-26 15:30:01,492 INFO  __main__        - Average Validation acc: 99.37578027465668
+2022-11-26 15:32:17,586 INFO  __main__        - Epoch: 4/10
+2022-11-26 15:32:17,586 INFO  __main__        - Average Training Loss: 0.017692577534120495
+2022-11-26 15:32:17,586 INFO  __main__        - Average Validation Loss: 0.010756559124788045
+2022-11-26 15:32:17,586 INFO  __main__        - Average Training Acc: 99.51638065522621
+2022-11-26 15:32:17,586 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:34:17,112 INFO  __main__        - Epoch: 5/10
+2022-11-26 15:34:17,112 INFO  __main__        - Average Training Loss: 0.016497872660830026
+2022-11-26 15:34:17,112 INFO  __main__        - Average Validation Loss: 0.015270840833151967
+2022-11-26 15:34:17,128 INFO  __main__        - Average Training Acc: 99.48517940717629
+2022-11-26 15:34:17,128 INFO  __main__        - Average Validation acc: 99.625468164794
+2022-11-26 15:36:20,833 INFO  __main__        - Epoch: 6/10
+2022-11-26 15:36:20,849 INFO  __main__        - Average Training Loss: 0.0191543968840945
+2022-11-26 15:36:20,849 INFO  __main__        - Average Validation Loss: 0.01080615718265928
+2022-11-26 15:36:20,849 INFO  __main__        - Average Training Acc: 99.40717628705148
+2022-11-26 15:36:20,849 INFO  __main__        - Average Validation acc: 99.75031210986268
+2022-11-26 15:36:20,849 INFO  __main__        - New High Acc: <<<<< 87.56864702945582 >>>>>
+2022-11-26 15:38:47,314 INFO  __main__        - Epoch: 7/10
+2022-11-26 15:38:47,330 INFO  __main__        - Average Training Loss: 0.018492877536833156
+2022-11-26 15:38:47,330 INFO  __main__        - Average Validation Loss: 0.005666994594420398
+2022-11-26 15:38:47,330 INFO  __main__        - Average Training Acc: 99.51638065522621
+2022-11-26 15:38:47,330 INFO  __main__        - Average Validation acc: 99.75031210986268
+2022-11-26 15:41:11,435 INFO  __main__        - Epoch: 8/10
+2022-11-26 15:41:11,435 INFO  __main__        - Average Training Loss: 0.013944605865429206
+2022-11-26 15:41:11,435 INFO  __main__        - Average Validation Loss: 0.00461893117461802
+2022-11-26 15:41:11,435 INFO  __main__        - Average Training Acc: 99.51638065522621
+2022-11-26 15:41:11,435 INFO  __main__        - Average Validation acc: 99.87515605493134
+2022-11-26 15:43:35,789 INFO  __main__        - Epoch: 9/10
+2022-11-26 15:43:35,804 INFO  __main__        - Average Training Loss: 0.012380583577014504
+2022-11-26 15:43:35,804 INFO  __main__        - Average Validation Loss: 0.018263504757695975
+2022-11-26 15:43:35,804 INFO  __main__        - Average Training Acc: 99.54758190327613
+2022-11-26 15:43:35,804 INFO  __main__        - Average Validation acc: 99.50062421972534
+2022-11-26 15:44:01,032 INFO  __main__        - Fold: 4, Model: EfficientNet
+2022-11-26 15:46:28,763 INFO  __main__        - Epoch: 0/10
+2022-11-26 15:46:28,779 INFO  __main__        - Average Training Loss: 0.018492249196363088
+2022-11-26 15:46:28,779 INFO  __main__        - Average Validation Loss: 0.004287600356526923
+2022-11-26 15:46:28,779 INFO  __main__        - Average Training Acc: 99.32917316692668
+2022-11-26 15:46:28,779 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:48:52,399 INFO  __main__        - Epoch: 1/10
+2022-11-26 15:48:52,415 INFO  __main__        - Average Training Loss: 0.012283852330094444
+2022-11-26 15:48:52,415 INFO  __main__        - Average Validation Loss: 0.008848750345207997
+2022-11-26 15:48:52,415 INFO  __main__        - Average Training Acc: 99.57878315132605
+2022-11-26 15:48:52,415 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:51:14,792 INFO  __main__        - Epoch: 2/10
+2022-11-26 15:51:14,808 INFO  __main__        - Average Training Loss: 0.014791705811848362
+2022-11-26 15:51:14,808 INFO  __main__        - Average Validation Loss: 0.008085762807397411
+2022-11-26 15:51:14,808 INFO  __main__        - Average Training Acc: 99.43837753510141
+2022-11-26 15:51:14,808 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 15:54:06,484 INFO  __main__        - Epoch: 3/10
+2022-11-26 15:54:06,492 INFO  __main__        - Average Training Loss: 0.013104968939484811
+2022-11-26 15:54:06,492 INFO  __main__        - Average Validation Loss: 0.004752734801978017
+2022-11-26 15:54:06,493 INFO  __main__        - Average Training Acc: 99.57878315132605
+2022-11-26 15:54:06,493 INFO  __main__        - Average Validation acc: 99.87515605493134
+2022-11-26 15:56:58,208 INFO  __main__        - Epoch: 4/10
+2022-11-26 15:56:58,208 INFO  __main__        - Average Training Loss: 0.012288272245326349
+2022-11-26 15:56:58,208 INFO  __main__        - Average Validation Loss: 0.009284972057778037
+2022-11-26 15:56:58,208 INFO  __main__        - Average Training Acc: 99.60998439937597
+2022-11-26 15:56:58,208 INFO  __main__        - Average Validation acc: 99.75031210986268
+2022-11-26 15:56:58,208 INFO  __main__        - New High Acc: <<<<< 87.66849725411883 >>>>>
+2022-11-26 15:59:23,081 INFO  __main__        - Epoch: 5/10
+2022-11-26 15:59:23,081 INFO  __main__        - Average Training Loss: 0.01440709777553067
+2022-11-26 15:59:23,081 INFO  __main__        - Average Validation Loss: 0.003143221290648529
+2022-11-26 15:59:23,081 INFO  __main__        - Average Training Acc: 99.53198127925117
+2022-11-26 15:59:23,081 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 16:01:47,224 INFO  __main__        - Epoch: 6/10
+2022-11-26 16:01:47,240 INFO  __main__        - Average Training Loss: 0.008931750189188174
+2022-11-26 16:01:47,240 INFO  __main__        - Average Validation Loss: 0.007135350587511126
+2022-11-26 16:01:47,240 INFO  __main__        - Average Training Acc: 99.70358814352575
+2022-11-26 16:01:47,240 INFO  __main__        - Average Validation acc: 99.75031210986268
+2022-11-26 16:04:11,234 INFO  __main__        - Epoch: 7/10
+2022-11-26 16:04:11,250 INFO  __main__        - Average Training Loss: 0.012824560593946882
+2022-11-26 16:04:11,250 INFO  __main__        - Average Validation Loss: 0.004634528961802461
+2022-11-26 16:04:11,250 INFO  __main__        - Average Training Acc: 99.57878315132605
+2022-11-26 16:04:11,250 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 16:06:35,951 INFO  __main__        - Epoch: 8/10
+2022-11-26 16:06:35,966 INFO  __main__        - Average Training Loss: 0.012939996453889603
+2022-11-26 16:06:35,966 INFO  __main__        - Average Validation Loss: 0.01566747028015464
+2022-11-26 16:06:35,966 INFO  __main__        - Average Training Acc: 99.59438377535102
+2022-11-26 16:06:35,966 INFO  __main__        - Average Validation acc: 99.625468164794
+2022-11-26 16:09:50,565 INFO  __main__        - Epoch: 9/10
+2022-11-26 16:09:50,581 INFO  __main__        - Average Training Loss: 0.012782742715004906
+2022-11-26 16:09:50,581 INFO  __main__        - Average Validation Loss: 0.009389999240120437
+2022-11-26 16:09:50,581 INFO  __main__        - Average Training Acc: 99.59438377535102
+2022-11-26 16:09:50,581 INFO  __main__        - Average Validation acc: 99.812734082397
+2022-11-26 16:10:16,054 INFO  __main__        - EfficientNet Training completed in -151m 23s

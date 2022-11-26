@@ -77,23 +77,35 @@ def plot_confusion_matrix(cm, class_names):
 def train_epoch(model, device, dataloader, loss_fn, optimizer):
     train_loss, train_correct = 0.0, 0
     model.train()
+    
     for images, labels in dataloader:
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         output = model(images)
+<<<<<<< Updated upstream
         # print('outputs',output.shape)
         # print('labels',labels.shape)
         loss = loss_fn(output, labels)
+=======
+        loss = loss_fn(output,labels)
+>>>>>>> Stashed changes
         loss.backward()
         optimizer.step()
         train_loss += loss.item() * images.size(0)
         scores, predictions = torch.max(output.data, 1)
         train_correct += (predictions == labels).sum().item()
+<<<<<<< Updated upstream
 
     return train_loss, train_correct
 
 
 def valid_epoch(model, device, dataloader, loss_fn):
+=======
+                    
+    return train_loss,train_correct
+  
+def valid_epoch(model,device,dataloader,loss_fn):
+>>>>>>> Stashed changes
     valid_loss, val_correct = 0.0, 0
     model.eval()
     y_true, y_pred = [], []  # Use for Confusion Matrix
@@ -323,8 +335,11 @@ if __name__ == '__main__':
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         LOGGER.info('Fold: {}, Model: {}'.format(fold, model._get_name()))
+<<<<<<< Updated upstream
         # LOGGER.info('Model {}'.format(model._get_name()))
         # print('Wandb Run Name: {}'.format(wandb.run.name))
+=======
+>>>>>>> Stashed changes
 
         # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
 
@@ -353,7 +368,8 @@ if __name__ == '__main__':
             val_loss = val_loss / len(val_loader.sampler)
             val_acc = val_correct / len(val_loader.sampler) * 100
 
-            # LOGGER.info(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG Training Acc: {train_acc} % \t Validation Acc {val_acc}")
+            # print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG
+            # Training Acc: {train_acc} % \t Validation Acc {val_acc}")
             LOGGER.info(f'Epoch: {epoch}/{args.epochs}')
             LOGGER.info(f'Average Training Loss: {train_loss}')
             LOGGER.info(f'Average Validation Loss: {val_loss}')
@@ -363,7 +379,14 @@ if __name__ == '__main__':
             test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
             test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
 
+<<<<<<< Updated upstream
             # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+=======
+
+            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing
+            # Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
+            
+>>>>>>> Stashed changes
             # ======================= Save per Epoch ======================================= #
 
             logger.add_scalars('Loss', {'train': train_loss,
@@ -390,16 +413,26 @@ if __name__ == '__main__':
 
         # ======================= Test Model on HOS ======================= #
 
+<<<<<<< Updated upstream
         test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model, device, test_loader, criterion,
                                                                             class_names)
+=======
+        # ======================= Test Model on HOS ======================= #
+
+        test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model,device,test_loader,criterion,class_names)
+>>>>>>> Stashed changes
 
         logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
 
         test_loss = test_loss / len(test_loader.sampler)
         test_acc = test_correct / len(test_loader.sampler) * 100
 
+<<<<<<< Updated upstream
         np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy',
                 cf_matrix)
+=======
+        np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy', cf_matrix)
+>>>>>>> Stashed changes
 
         # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
         # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
@@ -409,8 +442,11 @@ if __name__ == '__main__':
         logger.add_scalar('Fold/Acc', test_acc, fold)
         logger.add_scalar('Fold/Loss', test_loss, fold)
 
+<<<<<<< Updated upstream
         #
 
+=======
+>>>>>>> Stashed changes
         # ======================= Save model if new high accuracy ======================= #
         if test_acc > best_acc:
             # print('#'*25)
