@@ -1,9 +1,7 @@
-data/combined_data/*
-data/Augmented_rename/*
-data/HAM10k/*
-data/Aug2.0/*
-data/Combined_data/*
-data/Augmented_rename
+data/*
+models/*
+save/*
+runs/*
 .idea/*
 *.ipynb_checkpoints
 *.iml
