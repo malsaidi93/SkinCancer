@@ -7,15 +7,23 @@ Skin cancer classification
 
 ## Metadata csv
 
-lesion_id,image_id,dx,dx_type,age,sex,localization
+1. lesion_id
+2. image_id
+3. dx
+4. dx_type
+5. age
+6. sex
+7. localization
 
-dx --> class
-|mel|1113|
-|bkl|1099|
-|bcc|514|
-|akiec|327|
-|vasc|142|
-|df|115|
+Class -- > dx
+
+### Class Distribution
+ - mel 1113
+ - bkl 1099
+ - bcc 514
+ - akiec 327
+ - vasc 142
+ - df115
 
 ## Preprocessing
 1. Augmentation
