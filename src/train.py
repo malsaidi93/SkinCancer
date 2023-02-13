@@ -82,30 +82,16 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer):
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
         output = model(images)
-<<<<<<< Updated upstream
-        # print('outputs',output.shape)
-        # print('labels',labels.shape)
-        loss = loss_fn(output, labels)
-=======
         loss = loss_fn(output,labels)
->>>>>>> Stashed changes
         loss.backward()
         optimizer.step()
         train_loss += loss.item() * images.size(0)
         scores, predictions = torch.max(output.data, 1)
         train_correct += (predictions == labels).sum().item()
-<<<<<<< Updated upstream
-
-    return train_loss, train_correct
-
-
-def valid_epoch(model, device, dataloader, loss_fn):
-=======
                     
     return train_loss,train_correct
   
 def valid_epoch(model,device,dataloader,loss_fn):
->>>>>>> Stashed changes
     valid_loss, val_correct = 0.0, 0
     model.eval()
     y_true, y_pred = [], []  # Use for Confusion Matrix
@@ -224,16 +210,9 @@ if __name__ == '__main__':
     test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
     classes = np.unique(dataset.classes)
 
-    # print(classes)
-    # sys.exit()
-
     # ======================= Model | Loss Function | Optimizer ======================= #
 
-    # for i in ['vit', 'resnet']:  #, 'convnext'
-    #     args.model = i
-
     if args.model == 'efficientnet':
-
         model = efficientnet()
 
         # if args.finetune:
@@ -335,11 +314,6 @@ if __name__ == '__main__':
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         LOGGER.info('Fold: {}, Model: {}'.format(fold, model._get_name()))
-<<<<<<< Updated upstream
-        # LOGGER.info('Model {}'.format(model._get_name()))
-        # print('Wandb Run Name: {}'.format(wandb.run.name))
-=======
->>>>>>> Stashed changes
 
         # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
 
