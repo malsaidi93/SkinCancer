@@ -5,7 +5,11 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from catboost import CatBoostClassifier
 from imgaug import augmenters as iaa
+from sklearn.ensemble import IsolationForest
+import xgboost as xgb
 import pandas as pd
 import cv2
 import warnings
@@ -19,8 +23,8 @@ sampled_image_paths = []
 sampled_class_labels = []
 
 # Specify the number of samples per class and the total number of samples
-samples_per_class = 20  # Adjust as needed
-total_samples = 100
+samples_per_class = 100  # Adjust as needed
+total_samples = 500
 
 # Iterate through unique classes
 unique_classes = data["dx"].unique()
@@ -77,7 +81,7 @@ X_test = (X_test * 255).astype(np.uint8)
 augmentations = [
     iaa.Fliplr(0.5),  # Horizontal flip with 50% probability
     iaa.Flipud(0.5),  # Vertical flip with 50% probability
-    iaa.Affine(rotate=(-45, 45)),  # Rotation between -45 and 45 degrees
+    # iaa.Affine(rotate=(-45, 45)),  # Rotation between -45 and 45 degrees
     iaa.Multiply((0.5, 1.5)),  # Brightness multiplication between 0.5 and 1.5
 ]
 
@@ -85,7 +89,17 @@ augmentations = [
 base_classifier = DecisionTreeClassifier(max_depth=1)
 
 # Initialize AdaBoostClassifier with the base classifier
+
 adaboost_classifier = AdaBoostClassifier(base_classifier, n_estimators=50, random_state=42)
+# adaboost_classifier = RandomForestClassifier(n_estimators=50, random_state=42)
+# adaboost_classifier = CatBoostClassifier(verbose=0, n_estimators=100)
+# adaboost_classifier = xgb.XGBClassifier(n_estimators=100,
+                                        # max_depth=6,
+                                        # learning_rate=0.1,
+                                        # verbosity=0,
+                                        # objective='multi:softmax',
+                                        # num_class=6,
+                                        # random_state=42)
 
 # Create a dictionary to store classification reports for each augmentation and class
 augmentation_reports = {}
@@ -112,6 +126,8 @@ for augmentation in augmentations:
         # Evaluate the classifier on the test set
         y_pred = adaboost_classifier.predict(X_test)
         # Check unique classes in y_test and y_pred
+        print(f'Unique classes test : {np.unique(y_test)}')
+        print(f'Unique classes pred : {np.unique(y_pred)}')
         
         # # Confirm that both sets of unique classes match
         # if np.array_equal(unique_classes_test, unique_classes_pred):
@@ -126,14 +142,17 @@ for augmentation in augmentations:
 
 # Print the classification report for each augmentation technique and class
 for augmentation, class_reports in augmentation_reports.items():
+    print("#" * 40)
     print(f"\nAugmentation:  == {augmentation.name} ==\n")
     print("=" * 40)
     for class_label, report in class_reports.items():
         print(f"Class {class_label} Classification Report:")
         for metric, value in report.items():
-            if metric != 'accuracy' and metric == class_label:
+            if metric != 'accuracy' and f"Class_{metric}" == class_label:
+                print(f"metric: Class_{metric}, class_label: {class_label}")
                 print(f"{metric}: {value:.2f}" if isinstance(value, (float, np.float32)) else f"{metric}: {value}")
         print("=" * 40)
+    print("#" * 40)
 
 
 # print("*" * 40)
