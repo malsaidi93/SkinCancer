@@ -78,26 +78,28 @@ def train(csv, augmentation=None, total_samples=600, samples_per_class=100):
         # print(f'Classes test : {y_test}')
         # print(f'Classes pred : {y_pred}')
         classification_rep = classification_report(y_test, y_pred, target_names=unique_classes_test, output_dict=True)
-        print(f'Classification report: {classification_rep}')
+        # print(f'Classification report: {classification_rep}')
+        for key, value in classification_rep.items():
+            print(f'{key}: {value}') 
         print('=' * 40)
         
         augmentation_reports[f'Class_{class_label}'] = classification_rep
 
     # Print the classification report for each augmentation technique and class
-    for class_report, metric in augmentation_reports.items():
-        print("#" * 40)
-        print(f"\Class:  == {class_report} ==\n")
-        print("=" * 40)
-        if metric != 'accuracy':
-            # print(f"metric: {metric}, value: {value}")
-            print(f"{class_report}: {metric:.2f}" if isinstance(metric, (float, np.float32)) else f"{metric}: {value}")
+    # for class_report, metric in augmentation_reports.items():
+    #     print("#" * 40)
+    #     print(f"\Class:  == {class_report} ==\n")
+    #     print("=" * 40)
+    #     if metric != 'accuracy':
+    #         # print(f"metric: {metric}, value: {value}")
+    #         print(f"{class_report}: {metric:.2f}" if isinstance(metric, (float, np.float32)) else f"{class_report}: {metric}")
         
-    with open('metrics_100_per_class.txt', 'w+')as metrics:
+    with open('./reports/metrics_FlipLR_100Images.txt', 'w+')as metrics:
         metrics.write(str(augmentation_reports))
 
 
 if __name__ == "__main__":
-    csv = pd.read_csv("../csv/minority_train.csv")
+    csv = "../csv/minority_train.csv"
     augmentation = iaa.Fliplr(0.5)
     total_samples = 600
     sample_per_class = 100
