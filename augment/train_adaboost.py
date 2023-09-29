@@ -8,6 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
 from catboost import CatBoostClassifier
 from imgaug import augmenters as iaa
+import imgaug as ia
 from sklearn.ensemble import IsolationForest
 import xgboost as xgb
 import pandas as pd
@@ -94,13 +95,24 @@ def train(csv, augmentation=None, total_samples=600, samples_per_class=100):
     #         # print(f"metric: {metric}, value: {value}")
     #         print(f"{class_report}: {metric:.2f}" if isinstance(metric, (float, np.float32)) else f"{class_report}: {metric}")
         
-    with open('./reports/metrics_FlipLR_100Images.txt', 'w+')as metrics:
+    with open('./reports/metrics_Multiply_100Images.txt', 'w+')as metrics:
         metrics.write(str(augmentation_reports))
 
 
 if __name__ == "__main__":
     csv = "../csv/minority_train.csv"
-    augmentation = iaa.Fliplr(0.5)
+    augmentations = [
+        iaa.Fliplr(0.5),
+        iaa.Flipud(0.5),
+        iaa.Multiply(0.5),
+        iaa.GaussianBlur(0, 2.0),
+        iaa.CropAndPad(percent=(-0.05, 0.1), pad_mode=ia.ALL, pad_cval=(0, 255)),
+        iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5)),
+        iaa.Dropout((0.01, 0.1), per_channel=0.5),
+        iaa.Invert(0.05, per_channel=True),
+        iaa.AddToHueAndSaturation((-20, 20)),
+        iaa.Grayscale(alpha=(0.0, 1.0)),
+        ]
     total_samples = 600
     sample_per_class = 100
-    train(csv, augmentation, total_samples, sample_per_class)
+    train(csv, augmentations[2], total_samples, sample_per_class)
