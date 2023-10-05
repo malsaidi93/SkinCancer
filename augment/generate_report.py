@@ -3,6 +3,7 @@ import numpy as np
 import os
 import re
 import json
+from tabulate import tabulate
 
 def parse_tojson(data):
     # Use regular expressions to add double quotes around keys, including numeric keys
@@ -19,9 +20,11 @@ def get_augmentation_name(path):
 
 def generate_report(path):
     over_all_report = {}
-    files_list = os.listdir(path)    
+    files_list = os.listdir(path)
+    f1_scores = {}    
     for each_file in files_list:
         aug = get_augmentation_name(each_file)
+        f1_scores[aug] = {}
         with open(os.path.join('./reports', each_file), 'r') as f:
             p = parse_tojson(f.read())
             p = json.loads(p)
@@ -33,7 +36,9 @@ def generate_report(path):
             # print(class_keys.keys())
             for score_keys in p[class_keys].keys():
                 if f'Class_{score_keys}' == class_keys:
-                    print(f'{aug} Class_{score_keys} {p[class_keys][score_keys]["f1-score"]}')
+                    # print(f'{aug} Class_{score_keys} {p[class_keys][score_keys]["f1-score"]}')
+                    
+                    f1_scores[aug][f'Class_{score_keys}'] = p[class_keys][score_keys]['f1-score']
                     # over_all_report[each_key] = p[each_key][each_key_2]
         
         # this fragment of code is to get the highest f1-score among all the classes 
@@ -52,7 +57,11 @@ def generate_report(path):
                         max_f1_score = f1_score
                         max_f1_score_key = key
             max_f1_scores[class_name] = {'max_f1_score': max_f1_score, 'max_f1_score_key': max_f1_score_key}
-
+    
+    headers = ["File Name"] + list(f1_scores.keys())
+    table_data = [[file_key] + [f1_scores[class_key][file_key] for class_key in list(f1_scores.keys())] for file_key in f1_scores[list(f1_scores.keys())[0]].keys()]
+    print(tabulate(table_data, headers=headers, tablefmt="grid"))
+    
         # print(max_f1_scores)
 if __name__ == '__main__':
     path = './reports/'
