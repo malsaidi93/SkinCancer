@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import make_classification
 from sklearn.preprocessing import LabelEncoder
@@ -80,20 +80,29 @@ def train(csv, augmentation=None, total_samples=600, samples_per_class=100):
         if augmentation is not None:
             class_mask = (y_train == class_label)
             other_mask = (y_train != class_label)
-            augmented_X_train = X_train[class_mask].copy()
+            
+            original_X_train = X_train[class_mask].copy()
             non_augmented_X_train = X_train[other_mask].copy()
-            augmented_X_train = augmentation.augment_images(augmented_X_train)
+            augmented_X_train = augmentation.augment_images(original_X_train)
+            
+            # combine original and augmented data along with non-augmented data
+            original_data = np.concatenate((augmented_X_train, original_X_train), axis=0)
+            original_labels = np.concatenate((y_train[class_mask], y_train[class_mask]), axis=0)
             all_data = np.concatenate((augmented_X_train, non_augmented_X_train), axis=0)
             all_labels = np.concatenate((y_train[class_mask], y_train[other_mask]), axis=0)
         
         else:
             all_data = X_train
             all_labels = y_train
+        
+        print(f'')
             
         
         adaboost_classifier.fit(all_data, all_labels)
         y_pred = adaboost_classifier.predict(X_test)
         classification_rep = classification_report(y_test, y_pred, target_names=unique_classes_test, output_dict=True)
+        cf = confusion_matrix(y_test, y_pred)
+        print(f'Confusion Matrix: \n{cf}')
         # print(f'Classification report: {classification_rep}')
         for key, value in classification_rep.items():
             print(f'{key}: {value}') 
