@@ -61,8 +61,28 @@ def generate_report(path):
     headers = ["File Name"] + list(f1_scores.keys())
     table_data = [[file_key] + [f1_scores[class_key][file_key] for class_key in list(f1_scores.keys())] for file_key in f1_scores[list(f1_scores.keys())[0]].keys()]
     print(tabulate(table_data, headers=headers, tablefmt="grid"))
+
+def generate_report_single_file(file_path):
+    over_all_report = {}
+    exclude = ['accuracy', 'macro avg', 'weighted avg']
+    f1_scores = {} 
+    with open(file_path, 'r') as f:
+            p = parse_tojson(f.read())
+            p = json.loads(p)
+    
+    # Extract F1-scores for each class and file
+    f1_scores = {}
+    for file_name, file_data in p.items():
+        f1_scores[file_name] = {class_name: class_metrics['f1-score'] for class_name, class_metrics in file_data.items() if isinstance(class_metrics, dict)}
+
+    # Print as a table
+    headers = ["File Name"] + list(f1_scores.keys())
+    table_data = [[class_name] + [f1_scores[file_name][class_name] for file_name in list(f1_scores.keys())] for class_name in f1_scores[list(f1_scores.keys())[0]].keys()]
+    print(tabulate(table_data, headers=headers, tablefmt="grid"))
     
         # print(max_f1_scores)
 if __name__ == '__main__':
-    path = './reports/'
-    generate_report(path)
+    path = './reports_all/metrics_All_data.txt'
+    paths = './reports/'
+    generate_report(paths)
+    # generate_report_single_file(path)

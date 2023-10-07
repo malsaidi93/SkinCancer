@@ -76,8 +76,8 @@ augmentations = [
         iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5)),
         iaa.Dropout((0.01, 0.1), per_channel=0.5),
         iaa.Invert(0.05, per_channel=True),
-        iaa.AddToHueAndSaturation((-20, 20)),
-        iaa.Grayscale(alpha=(0.0, 1.0)),
+        # iaa.AddToHueAndSaturation((-20, 20)),
+        # iaa.Grayscale(alpha=(0.0, 1.0)),
         ]
 
 # Define the base classifier (Decision Tree)
@@ -92,7 +92,7 @@ augmentation_reports = {}
 # Train AdaBoost with each augmentation technique for each class and record classification report
 num_iterations = 10  # Number of iterations to test each augmentation
 for augmentation in augmentations:
-    print(f'AUGMENTATION: {augmentation.name}')
+    print(f'AUGMENTATION: {"None" if augmentation == None else augmentation.name}')
     if augmentation is None:
         aug = 'None'
         augmented_X_train = X_train
@@ -104,18 +104,19 @@ for augmentation in augmentations:
     classification_rep = classification_report(y_test, y_pred, target_names=[i for i in range(0,len(np.unique(y_train)))], output_dict=True)
     cf = confusion_matrix(y_test, y_pred)
     print(f'confusion matrix: \n{cf}')
+    
     # Store the classification report in the dictionary with keys based on augmentation and class
-    augmentation_reports[augmentation] = classification_rep
+    augmentation_reports[aug] = classification_rep
 
-with open(f'./reports/metrics_{aug}.txt', 'w+')as metrics:
+with open(f'./reports/metrics_All_data.txt', 'w+')as metrics:
     metrics.write(str(augmentation_reports))
 # Print the classification report for each augmentation technique and class
 for augmentation, class_reports in augmentation_reports.items():
     print("=" * 40)
-    print(f" Augmentation: == {augmentation.name} ==")
+    print(f" Augmentation: == {aug} ==")
     print("=" * 40)
     for metric, value in class_reports.items():
         print(f"{metric}: {value:.2f}" if isinstance(value, (float, np.float32)) else f"{metric}: {value}")
-        print("=" * 40)
+    print("=" * 40)
 
 
