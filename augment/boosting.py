@@ -15,6 +15,7 @@ import pandas as pd
 import cv2
 import warnings
 import json
+import random
 import os
 import time
 import itertools
@@ -41,7 +42,7 @@ def plot_confusion_matrix(cm, class_names, filename):
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig(f'./reports_all/{filename}.png')
+    plt.savefig(f'./reports_all/{filename}')
     # return figure
 
 # Load the dataset from the CSV file
@@ -163,11 +164,20 @@ while flag:
             for each_class in f1_scores.keys():
                 if f1_scores[each_class] < min_f1_score:
                     # print(f'Class: {each_class} F1-score: {classification_rep[str(each_class)]["f1-score"]}')
+                    
                     selected_class = (y_train == each_class)
+                    
                     images_copy = X_train[selected_class].copy()
+                    # combine_selected_image = np.array([])
+                    # for idx in range(0, 10):
+                    #     random_image  = random.randint(0, len(images_copy))
+                    #     selected_image = images_copy[random_image]
+                    #     np.concatenate((combine_selected_image, selected_image))
+                        
+                        
                     augmented_images = augmentations(images = images_copy)  # Assuming you have a function augmentations.augment_images
-                    X_train = np.concatenate((X_train, augmented_images), axis=0)
-                    y_train = np.concatenate((y_train, np.full((len(augmented_images),), each_class)), axis=0)
+                    X_train = np.concatenate((X_train, augmented_images[:10]), axis=0)
+                    y_train = np.concatenate((y_train, np.full((len(augmented_images[:10]),), each_class)), axis=0)
                     flag = True
             distribution = np.bincount(y_train)
             print(f'Distribution : {distribution}')
