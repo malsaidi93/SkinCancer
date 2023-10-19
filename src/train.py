@@ -348,11 +348,16 @@ if __name__ == '__main__':
             train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
             val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion)
             LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+            
+            # augment the images of classes with low f1-score
             for images, labels in train_loader:
                 for label in labels:
                     if label in classes_to_augment:
                         augmented_images = augmented_images(images=images)
-            train_loader = DataLoader()
+                    
+            # get the augmented images with original images to load into train_loader
+            train_loader = DataLoader(augmented_images, batch_size=batch_size, )
+            
             test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
                                                                            class_names)
             logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
