@@ -85,11 +85,17 @@ class SkinCancer(Dataset):
         
         # aug_list = [1,2,3,4,5,6,7,8]
         if self.augment_phase == True:
-            print()
+            # print()
             img_path = self.df.iloc[idx, -1]
             label = self.df.iloc[idx, 2]
             
-            selected_class = img_path[self.df['dx'] == self. classes_to_augment]
+            # classes_to_augment should be list
+            selected_class = img_path[self.df['dx'].isin(self.classes_to_augment)]
+            image = Image.open(selected_class)
+            image_tensor = self.transform(image)
+            label_id = torch.tensor(self.class_to_id[str(label)])
+            return image_tensor, label_id
+            
         
         else:
             img_path = self.df.iloc[idx, -1]
