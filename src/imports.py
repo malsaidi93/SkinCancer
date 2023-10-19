@@ -24,7 +24,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, Subset, random_split, SubsetRandomSampler, ConcatDataset
 from torchvision import datasets, models, transforms
-from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score
+from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, classification_report
 from sklearn.model_selection import train_test_split, KFold
 from sklearn.utils import class_weight
 import torch.optim as optim

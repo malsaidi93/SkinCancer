@@ -74,7 +74,7 @@ def plot_confusion_matrix(cm, class_names):
     return figure
 
 
-def train_epoch(model, device, dataloader, loss_fn, optimizer):
+def train_epoch(model, device, dataloader, loss_fn, optimizer, class_names):
     train_loss, train_correct = 0.0, 0
     model.train()
     
@@ -105,9 +105,11 @@ def valid_epoch(model,device,dataloader,loss_fn):
 
         val_correct += (predictions == labels).sum().item()
 
-    #         y_true.extend(labels.cpu().numpy())
-    #         y_pred.extend(predictions.cpu().numpy())
+        
+        y_true.extend(labels.cpu().numpy())
+        y_pred.extend(predictions.cpu().numpy())
 
+    classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
     #         y_t.append(labels.cpu().numpy())
     #         y_p.append(predictions.cpu().numpy())
 
@@ -133,7 +135,7 @@ def valid_epoch(model,device,dataloader,loss_fn):
 
     #     wandb.log({"TrainingConfusionMatrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
 
-    return valid_loss, val_correct
+    return valid_loss, val_correct, classification_rep
 
 
 def test_inference(model, device, dataloader, loss_fn, class_names):
@@ -322,9 +324,8 @@ if __name__ == '__main__':
         train_sampler = SubsetRandomSampler(train_idx)
         test_sampler = SubsetRandomSampler(val_idx)
 
-        train_loader = DataLoader(dataset, batch_size=batch_size,
-                                  sampler=train_sampler)  # train, will change for each fold
-        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)  # validation
+        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)  # train, will change for each fold
+        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler, class_names = classes)  # validation
         test_loader = DataLoader(test_dataset, batch_size=batch_size)  # hold out set, test once at the end of each fold
 
         # ======================= Train per fold ======================= #
