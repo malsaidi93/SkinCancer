@@ -109,7 +109,12 @@ def valid_epoch(model,device,dataloader,loss_fn):
         y_true.extend(labels.cpu().numpy())
         y_pred.extend(predictions.cpu().numpy())
 
+    classes_to_augment = []
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
+    for class_id, metrics in classification_rep.items():
+        if metrics['f1-score'] < 0.50:
+            classes_to_augment.append(class_id)
+    
     #         y_t.append(labels.cpu().numpy())
     #         y_p.append(predictions.cpu().numpy())
 
@@ -135,7 +140,7 @@ def valid_epoch(model,device,dataloader,loss_fn):
 
     #     wandb.log({"TrainingConfusionMatrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
 
-    return valid_loss, val_correct, classification_rep
+    return valid_loss, val_correct, classes_to_augment
 
 
 def test_inference(model, device, dataloader, loss_fn, class_names):
