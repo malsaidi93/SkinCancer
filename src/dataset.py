@@ -15,7 +15,7 @@ from sklearn.utils import class_weight
 class SkinCancer(Dataset):
     """Skin Cancer Dataset."""
 
-    def __init__(self, root_dir, meta, transform=None):
+    def __init__(self, root_dir, meta, transform=None, augment_phase=False, classes_to_augment=None):
         """
         Args:
             root_dir (string): Path to root directory containing images
@@ -47,7 +47,8 @@ class SkinCancer(Dataset):
         
         self.class_count =  self.df['dx'].value_counts().to_dict()
         self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
-        
+        self.augment_phase = augment_phase
+        self.classes_to_augment = classes_to_augment
         # self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
         # self.class_weights = torch.tensor(class_weight.compute_class_weight('balanced',classes=np.unique(self.df['dx'].to_numpy()),y=self.df['dx'].to_numpy()),device='cuda')
         
@@ -83,21 +84,28 @@ class SkinCancer(Dataset):
     def __getitem__(self, idx):
         
         # aug_list = [1,2,3,4,5,6,7,8]
-
-        img_path = self.df.iloc[idx, -1]
-        label = self.df.iloc[idx, 2]
-
-        # image = Image.open(img_path).convert('L')
-        image = Image.open(img_path)
-        # image = ImageOps.grayscale(image)
+        if self.augment_phase == True:
+            print()
+            img_path = self.df.iloc[idx, -1]
+            label = self.df.iloc[idx, 2]
+            
+            selected_class = img_path[self.df['dx'] == self. classes_to_augment]
         
-        # image = transforms.Resize(size=(224,224))(image)
-        # image = transforms.Resize(size=(224,224))(image)
-        # image_tensor = transforms.ToTensor()(image)
-        # image_tensor = transforms.Normalize([0.5], [0.5])
-        image_tensor = self.transform(image)
-        # x = random.choice(aug_list)
-        # image_tensor = augment(image,x)
-        
-        label_id = torch.tensor(self.class_to_id[str(label)])
-        return image_tensor, label_id
+        else:
+            img_path = self.df.iloc[idx, -1]
+            label = self.df.iloc[idx, 2]
+
+            # image = Image.open(img_path).convert('L')
+            image = Image.open(img_path)
+            # image = ImageOps.grayscale(image)
+            
+            # image = transforms.Resize(size=(224,224))(image)
+            # image = transforms.Resize(size=(224,224))(image)
+            # image_tensor = transforms.ToTensor()(image)
+            # image_tensor = transforms.Normalize([0.5], [0.5])
+            image_tensor = self.transform(image)
+            # x = random.choice(aug_list)
+            # image_tensor = augment(image,x)
+            
+            label_id = torch.tensor(self.class_to_id[str(label)])
+            return image_tensor, label_id

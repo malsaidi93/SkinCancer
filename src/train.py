@@ -318,6 +318,14 @@ if __name__ == '__main__':
 
     # ======================= Local Logger ======================= #
     LOGGER.info(f'Device: {device}')
+    
+    augmentations = iaa.Sequential([
+        iaa.Fliplr(0.5),
+        iaa.Flipud(0.5),
+        iaa.GaussianBlur((0, 3.0)),
+        iaa.CropAndPad(percent=(-0.05, 0.1), pad_mode=ia.ALL, pad_cval=(0, 255)),
+        iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5))
+    ])
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         LOGGER.info('Fold: {}, Model: {}'.format(fold, model._get_name()))
@@ -338,7 +346,13 @@ if __name__ == '__main__':
             # print(f'Epoch :: {epoch}')
             step += 1
             train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-            val_loss, val_correct = valid_epoch(model, device, val_loader, criterion)
+            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion)
+            LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+            for images, labels in train_loader:
+                for label in labels:
+                    if label in classes_to_augment:
+                        augmented_images = augmented_images(images=images)
+            train_loader = DataLoader()
             test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
                                                                            class_names)
             logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
