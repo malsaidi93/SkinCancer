@@ -130,6 +130,7 @@ while flag:
             if len(clf) > 0:
                 with open(f'./classifier/{clf[-1]}','rb') as f:
                     print(f'Loading {clf[-1]} classifier...')
+                    print(f'Estimator Weight: {adaboost_classifier.estimator_weights_}')
                     adaboost_classifier = pickle.load(f)
             
             start = time.time()

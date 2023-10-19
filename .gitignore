@@ -22,3 +22,5 @@ env/*
 env
 /env/*
 augment/images/*
+augment/reports/*
+augment/classifier/*
