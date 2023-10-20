@@ -1,44 +1,4 @@
-import time
-import os, copy, random
-import itertools
-import io
-import datetime
-import sys
-import torch
-import torch.nn as nn
-from torch.nn import functional as F
-import torch.optim as optim
-from torch.optim import lr_scheduler
-from torch.utils.data import Dataset, DataLoader, Subset, random_split, SubsetRandomSampler, ConcatDataset
-
-import torchvision
-import torchvision.transforms as transforms
-from torchvision import datasets, models, transforms
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
-from sklearn.model_selection import train_test_split
-from sklearn.utils import class_weight
-
-from config import args_parser
-from models import *
-from dataset import SkinCancer
-from torch.utils.tensorboard import SummaryWriter
-
-from sklearn.metrics import confusion_matrix, f1_score, roc_auc_score, precision_score, recall_score
-
-# import tensorflow as tf
-
-import wandb
-import warnings
-
-warnings.filterwarnings('ignore')
-
-# setting up LOGGER
-import logging
-from utils import setup_logging
+from imports import *
 
 
 def plot_confusion_matrix(cm, class_names):
@@ -74,7 +34,7 @@ def plot_confusion_matrix(cm, class_names):
     return figure
 
 
-def train_epoch(model, device, dataloader, loss_fn, optimizer, class_names):
+def train_epoch(model, device, dataloader, loss_fn, optimizer,):
     train_loss, train_correct = 0.0, 0
     model.train()
     
@@ -212,9 +172,9 @@ if __name__ == '__main__':
     # ======================= DATA ======================= #
 
     data_dir = '../data/Combined_data/'
-    dataset = SkinCancer(data_dir, '../data/train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
     dataset_size = len(dataset)
-    test_dataset = SkinCancer(data_dir, '../data/test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     classes = np.unique(dataset.classes)
 
     # ======================= Model | Loss Function | Optimizer ======================= #
@@ -338,25 +298,64 @@ if __name__ == '__main__':
         test_sampler = SubsetRandomSampler(val_idx)
 
         train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)  # train, will change for each fold
-        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler, class_names = classes)  # validation
+        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)  # validation
         test_loader = DataLoader(test_dataset, batch_size=batch_size)  # hold out set, test once at the end of each fold
 
+        train_augment = None
         # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
             # print(f'Epoch :: {epoch}')
             step += 1
-            train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion)
-            LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
             
-            # augment the images of classes with low f1-score
-            for images, labels in train_loader:
-                for label in labels:
-                    if label in classes_to_augment:
-                        augmented_images = augmented_images(images=images)
+            if train_augment is not None:
+                train_loss, train_correct = train_epoch(model, device, train_augment, criterion, optimizer)
+                
+            else:
+                train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
+            
+            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion)
+            
+            
+            # ===================================================================================================
+            #    v2.0 - Augmenting Images of classes with low f1-score
+            # ===================================================================================================
+            if train_augment is None:
+                LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+                
+                # augment the images of classes with low f1-score
+                for images, labels in train_loader:
+                    # get the images of the classes to augment 
+                    for idx, label in enumerate(labels):
+                        if label in classes_to_augment:
+                            augmented_images = augmentations.augment_images(images=images[idx])
+                        
+                    # create class
+                    skinCancerCustom = skinCancerCustom(augmented_images, labels)
+                    combined_dataset = CombinedDataset(dataset, skinCancerCustom)
                     
-            # get the augmented images with original images to load into train_loader
-            train_loader = DataLoader(augmented_images, batch_size=batch_size, )
+                    LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
+                    LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
+            
+                train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
+            
+            else:
+                LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+                
+                # augment the images of classes with low f1-score
+                for images, labels in train_augment:
+                    # get the images of the classes to augment 
+                    for idx, label in enumerate(labels):
+                        if label in classes_to_augment:
+                            augmented_images = augmentations.augment_images(images=images[idx])
+                        
+                    # create class
+                    skinCancerCustom = skinCancerCustom(augmented_images, labels)
+                    combined_dataset = CombinedDataset(dataset, skinCancerCustom)
+            
+                train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
+            # train_loader = DataLoader(augmented_images, batch_size=batch_size, )
+            # ===================================================================================================
+            
             
             test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
                                                                            class_names)

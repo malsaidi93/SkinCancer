@@ -8,9 +8,42 @@ import pandas as pd
 from PIL import Image, ImageOps
 import random
 from sklearn.utils import class_weight
+
+from torch.utils.data import ConcatDataset
 # from do_augmentation import augment
 
+class SkinCancerCustom(Dataset):
+    def __init__(self, images, labels, transform=None):
+        self.images = images
+        self.labels = labels
+        self.transform = transform
 
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, index):
+        image = self.images[index]
+        label = self.labels[index]
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+
+class CombinedDataset(Dataset):
+    def __init__(self, csv_dataset, array_dataset):
+        self.csv_dataset = csv_dataset
+        self.array_dataset = array_dataset
+
+    def __len__(self):
+        return len(self.csv_dataset) + len(self.array_dataset)
+
+    def __getitem__(self, index):
+        if index < len(self.csv_dataset):
+            return self.csv_dataset[index]
+        else:
+            return self.array_dataset[index - len(self.csv_dataset)]
 
 class SkinCancer(Dataset):
     """Skin Cancer Dataset."""
@@ -83,35 +116,20 @@ class SkinCancer(Dataset):
 
     def __getitem__(self, idx):
         
-        # aug_list = [1,2,3,4,5,6,7,8]
-        if self.augment_phase == True:
-            # print()
-            img_path = self.df.iloc[idx, -1]
-            label = self.df.iloc[idx, 2]
-            
-            # classes_to_augment should be list
-            selected_class = img_path[self.df['dx'].isin(self.classes_to_augment)]
-            image = Image.open(selected_class)
-            image_tensor = self.transform(image)
-            label_id = torch.tensor(self.class_to_id[str(label)])
-            return image_tensor, label_id
-            
-        
-        else:
-            img_path = self.df.iloc[idx, -1]
-            label = self.df.iloc[idx, 2]
+        img_path = self.df.iloc[idx, -1]
+        label = self.df.iloc[idx, 2]
 
-            # image = Image.open(img_path).convert('L')
-            image = Image.open(img_path)
-            # image = ImageOps.grayscale(image)
-            
-            # image = transforms.Resize(size=(224,224))(image)
-            # image = transforms.Resize(size=(224,224))(image)
-            # image_tensor = transforms.ToTensor()(image)
-            # image_tensor = transforms.Normalize([0.5], [0.5])
-            image_tensor = self.transform(image)
-            # x = random.choice(aug_list)
-            # image_tensor = augment(image,x)
-            
-            label_id = torch.tensor(self.class_to_id[str(label)])
-            return image_tensor, label_id
+        # image = Image.open(img_path).convert('L')
+        image = Image.open(img_path)
+        # image = ImageOps.grayscale(image)
+        
+        # image = transforms.Resize(size=(224,224))(image)
+        # image = transforms.Resize(size=(224,224))(image)
+        # image_tensor = transforms.ToTensor()(image)
+        # image_tensor = transforms.Normalize([0.5], [0.5])
+        image_tensor = self.transform(image)
+        # x = random.choice(aug_list)
+        # image_tensor = augment(image,x)
+        
+        label_id = torch.tensor(self.class_to_id[str(label)])
+        return image_tensor, label_id

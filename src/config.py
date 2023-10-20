@@ -5,7 +5,7 @@ def args_parser():
     parser = argparse.ArgumentParser()
 
     # federated arguments (Notation for the arguments followed from paper)
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=2,
                         help="number of rounds of training")
     
 
@@ -15,7 +15,7 @@ def args_parser():
     parser.add_argument('--batch', type=int, default=8,
                         help='batch size')
 
-    parser.add_argument('--model', type=str, default='convext', help='model name')
+    parser.add_argument('--model', type=str, default='resnet', help='model name')
     
     parser.add_argument('--finetune', type=bool, default=False, help='finetune by adding layers')
 
@@ -26,7 +26,7 @@ def args_parser():
     parser.add_argument('--gpu', type=bool, default=True, help="To use cuda, set \
                         to a specific GPU ID. Default set to use CPU.")
     
-    parser.add_argument('--device', type=str, default='cuda:0', help="To use cuda, set \
+    parser.add_argument('--device', type=str, default='mps', help="To use cuda, set \
                         to a specific GPU ID. Default set to use CPU.")
 
     parser.add_argument('--optimizer', type=str, default='adamx', help="type \
