@@ -51,7 +51,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer,):
                     
     return train_loss,train_correct
   
-def valid_epoch(model,device,dataloader,loss_fn):
+def valid_epoch(model,device,dataloader,loss_fn, class_names):
     valid_loss, val_correct = 0.0, 0
     model.eval()
     y_true, y_pred = [], []  # Use for Confusion Matrix
@@ -71,10 +71,14 @@ def valid_epoch(model,device,dataloader,loss_fn):
 
     classes_to_augment = []
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
-    for class_id, metrics in classification_rep.items():
-        if metrics['f1-score'] < 0.50:
-            classes_to_augment.append(class_id)
     
+    # print(f'Classification Report:\n {classification_rep} \nClass_names: {class_names}\n Class_Keys: {classification_rep.keys()}')
+    for class_id in classification_rep.keys():
+        if class_id in  class_names:
+            if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
+                classes_to_augment.append(class_id)
+    
+    # print()
     #         y_t.append(labels.cpu().numpy())
     #         y_p.append(predictions.cpu().numpy())
 
@@ -306,14 +310,15 @@ if __name__ == '__main__':
         for epoch in range(args.epochs):
             # print(f'Epoch :: {epoch}')
             step += 1
-            
+            augmented_images = []
+            augmented_labels = []
             if train_augment is not None:
                 train_loss, train_correct = train_epoch(model, device, train_augment, criterion, optimizer)
                 
             else:
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
             
-            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion)
+            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
             
             
             # ===================================================================================================
@@ -324,17 +329,21 @@ if __name__ == '__main__':
                 
                 # augment the images of classes with low f1-score
                 for images, labels in train_loader:
+                    labels_list = labels.cpu().numpy()
+                    images_list = images.cpu().numpy()
+                    # print(f"Batch: Labels => {labels}")
                     # get the images of the classes to augment 
-                    for idx, label in enumerate(labels):
-                        if label in classes_to_augment:
-                            augmented_images = augmentations.augment_images(images=images[idx])
+                    for idx, label in enumerate(labels_list):
+                        if dataset.class_id[label] in classes_to_augment:
+                            augmented_images.append(augmentations.augment_images(images=images_list[idx]))
                         
                     # create class
-                    skinCancerCustom = skinCancerCustom(augmented_images, labels)
+                    skinCancerCustom = SkinCancerCustom(augmented_images, augmented_labels)
                     combined_dataset = CombinedDataset(dataset, skinCancerCustom)
                     
-                    LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
-                    LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
+                LOGGER.info(f'Original Dataset: {dataset.__len__()}')
+                LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
+                LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
             
                 train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
             
@@ -342,14 +351,17 @@ if __name__ == '__main__':
                 LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
                 
                 # augment the images of classes with low f1-score
-                for images, labels in train_augment:
+                for images, labels in train_loader:
+                    labels_list = labels.cpu().numpy()
+                    images_list = images.cpu().numpy()
+                    # print(f"Batch: Labels => {labels}")
                     # get the images of the classes to augment 
-                    for idx, label in enumerate(labels):
-                        if label in classes_to_augment:
-                            augmented_images = augmentations.augment_images(images=images[idx])
+                    for idx, label in enumerate(labels_list):
+                        if dataset.class_id[label] in classes_to_augment:
+                            augmented_images.append(augmentations.augment_images(images=images_list[idx]))
                         
                     # create class
-                    skinCancerCustom = skinCancerCustom(augmented_images, labels)
+                    skinCancerCustom = SkinCancerCustom(augmented_images, augmented_labels)
                     combined_dataset = CombinedDataset(dataset, skinCancerCustom)
             
                 train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
