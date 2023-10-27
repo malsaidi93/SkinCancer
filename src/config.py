@@ -12,11 +12,11 @@ def args_parser():
     parser.add_argument('--lr', type=float, default=0.001,
                         help='learning rate')
 
-    parser.add_argument('--batch', type=int, default=8,
+    parser.add_argument('--batch', type=int, default=2,
                         help='batch size')
     
-    parser.add_argument('--threshold_aug', type=float, default=0.7,
-                        help='batch size')
+    parser.add_argument('--threshold_aug', type=float, default=0.5,
+                        help='f1-score threshold for augmentation')
 
     parser.add_argument('--model', type=str, default='resnet', help='model name')
     

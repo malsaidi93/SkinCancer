@@ -37,6 +37,7 @@ import logging
 import imgaug as ia
 from imgaug import augmenters as iaa
 import wandb
+from collections import Counter
 
 
 
@@ -44,7 +45,7 @@ import wandb
 
 import datetime
 from models import *
-from dataset import SkinCancer, SkinCancerCustom, CombinedDataset
+from dataset import SkinCancer, SkinCancerCustom, CombinedDataset, SkinCancerWithAugmentation
 from torch.utils.tensorboard import SummaryWriter
 
 import warnings

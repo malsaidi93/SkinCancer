@@ -106,6 +106,9 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
 
     return valid_loss, val_correct, classes_to_augment
 
+def batch_distribution(dataloader):
+    classes = [label for _, label in dataloader]
+    return Counter(classes)
 
 def test_inference(model, device, dataloader, loss_fn, class_names):
     test_loss, test_correct = 0.0, 0
@@ -177,6 +180,7 @@ if __name__ == '__main__':
 
     data_dir = '../data/Combined_data/'
     dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
+    
     dataset_size = len(dataset)
     test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     classes = np.unique(dataset.classes)
@@ -302,82 +306,69 @@ if __name__ == '__main__':
         test_sampler = SubsetRandomSampler(val_idx)
 
         train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)  # train, will change for each fold
+      
         val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)  # validation
         test_loader = DataLoader(test_dataset, batch_size=batch_size)  # hold out set, test once at the end of each fold
 
-        train_augment = None
+        LOGGER.info('Fold: {}, Model: {}, Data Loaded..'.format(fold, model._get_name()))
+        augment_phase = False
         # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
+            start_epoch = time.time()
             # print(f'Epoch :: {epoch}')
             step += 1
-            augmented_images = []
-            augmented_labels = []
-            if train_augment is not None:
-                train_loss, train_correct = train_epoch(model, device, train_augment, criterion, optimizer)
+            classes_to_augment = []
+            if augment_phase:
+                
+                datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
+                train_aug = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
+                train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)
+                
+                print('=' * 20)
+                print(f'Classes_to_Augment: {classes_to_augment}')
+                print(f'Batch Distribution: {batch_distribution(train_aug)}')
+                print('=' * 20)
                 
             else:
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-            
-            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
+                augment_phase = True
+                
+            val_loss, val_correct, c = valid_epoch(model, device, val_loader, criterion, dataset.classes)
+            classes_to_augment = c
             
             
             # ===================================================================================================
             #    v2.0 - Augmenting Images of classes with low f1-score
             # ===================================================================================================
-            if train_augment is None:
-                LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+            # if not augment_phase:
+            #     LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
                 
-                # augment the images of classes with low f1-score
-                for images, labels in train_loader:
-                    labels_list = labels.cpu().numpy()
-                    images_list = images.cpu().numpy()
-                    # print(f"Batch: Labels => {labels}")
-                    # get the images of the classes to augment 
-                    for idx, label in enumerate(labels_list):
-                        if dataset.class_id[label] in classes_to_augment:
-                            augmented_images.append(augmentations.augment_images(images=images_list[idx]))
-                        
-                    # create class
-                    skinCancerCustom = SkinCancerCustom(augmented_images, augmented_labels)
-                    combined_dataset = CombinedDataset(dataset, skinCancerCustom)
-                    
-                LOGGER.info(f'Original Dataset: {dataset.__len__()}')
-                LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
-                LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
-            
-                train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
-            
-            else:
-                LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+            #     # augment the images of classes with low f1-score
+            #     for images, labels in train_loader:
+            #         labels_list = labels.cpu().numpy()
+            #         images_list = images.cpu().numpy()
+            #         # print(f"Batch: Labels => {labels}")
+            #         # get the images of the classes to augment 
+            #         for idx, label in enumerate(labels_list):
+            #             if dataset.class_id[label] in classes_to_augment:
+            #                 augmented_images.append(augmentations.augment_images(images=images_list[idx]))
                 
-                # augment the images of classes with low f1-score
-                for images, labels in train_loader:
-                    labels_list = labels.cpu().numpy()
-                    images_list = images.cpu().numpy()
-                    # print(f"Batch: Labels => {labels}")
-                    # get the images of the classes to augment 
-                    for idx, label in enumerate(labels_list):
-                        if dataset.class_id[label] in classes_to_augment:
-                            augmented_images.append(augmentations.augment_images(images=images_list[idx]))
-                        
-                    # create class
-                    skinCancerCustom = SkinCancerCustom(augmented_images, augmented_labels)
-                    combined_dataset = CombinedDataset(dataset, skinCancerCustom)
-            
-                train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
-            # train_loader = DataLoader(augmented_images, batch_size=batch_size, )
             # ===================================================================================================
             
+            # Validation Metrics
+            val_loss = val_loss / len(val_loader.sampler)
+            val_acc = val_correct / len(val_loader.sampler) * 100
             
-            test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
-                                                                           class_names)
-            logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
+            
+            # test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
+            #                                                                class_names)
+            # logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
             val_loss = val_loss / len(val_loader.sampler)
             val_acc = val_correct / len(val_loader.sampler) * 100
-
+            end_epoch = time.time()
             # print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG
             # Training Acc: {train_acc} % \t Validation Acc {val_acc}")
             LOGGER.info(f'Epoch: {epoch}/{args.epochs}')
@@ -385,26 +376,23 @@ if __name__ == '__main__':
             LOGGER.info(f'Average Validation Loss: {val_loss}')
             LOGGER.info(f'Average Training Acc: {train_acc}')
             LOGGER.info(f'Average Validation acc: {val_acc}')
+            LOGGER.info(f'Time/Epoch : {(start_epoch - end_epoch)/60} minutes')
 
-            test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
-            test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
+            # test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
+            # test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
 
             # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
             # ======================= Save per Epoch ======================================= #
 
-            logger.add_scalars('Loss', {'train': train_loss,
-                                        'val': val_loss,
-                                        'test': test_loss_epoch}, step)
+            logger.add_scalars('Loss', {'train': train_loss, 'val': val_loss }, step)
 
-            logger.add_scalars('Acc', {'train': train_acc,
-                                       'val': val_acc,
-                                       'test': test_acc_epoch}, step)
+            logger.add_scalars('Acc', {'train': train_acc, 'val': val_acc }, step)
 
             # ======================= Save model if new high accuracy ======================= #
-            if test_acc_epoch > best_acc:
-                LOGGER.info(f'New High Acc: <<<<< {test_acc_epoch} >>>>>')
+            if val_acc > best_acc:
+                LOGGER.info(f'New High Val Acc: <<<<< {val_acc} >>>>>')
 
-                best_acc = test_acc_epoch
+                best_acc = val_acc
                 best_model_wts = copy.deepcopy(model.state_dict())
                 torch.save(model.state_dict(),
                            f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
@@ -434,6 +422,9 @@ if __name__ == '__main__':
 
         logger.add_scalar('Fold/Acc', test_acc, fold)
         logger.add_scalar('Fold/Loss', test_loss, fold)
+        
+        LOGGER.info(f'Test Acc: {test_acc}')
+        LOGGER.info(f'Test Test Loss: {test_loss}')
 
         #
 
