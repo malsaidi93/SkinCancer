@@ -34,6 +34,7 @@ class CombinedDataset(Dataset):
     def __init__(self, csv_dataset, array_dataset):
         self.csv_dataset = csv_dataset
         self.array_dataset = array_dataset
+        self.class_distribution = np.unique(self.csv_dataset.classes_all, return_counts=True)
 
     def __len__(self):
         return len(self.csv_dataset) + len(self.array_dataset)

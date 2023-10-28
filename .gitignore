@@ -2,6 +2,7 @@ data/*
 models/*
 save/*
 runs/*
+output_files/*
 .idea/*
 *.ipynb_checkpoints
 *.iml

@@ -344,7 +344,6 @@ if __name__ == '__main__':
                 LOGGER.info(f'Original Dataset: {dataset.__len__()}')
                 LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
                 LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
-            
                 train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
             
             else:
@@ -363,7 +362,10 @@ if __name__ == '__main__':
                     # create class
                     skinCancerCustom = SkinCancerCustom(augmented_images, augmented_labels)
                     combined_dataset = CombinedDataset(dataset, skinCancerCustom)
-            
+                
+                LOGGER.info(f'Original Dataset: {dataset.__len__()}')
+                LOGGER.info(f'Augmented Dataset: {skinCancerCustom.__len__()}')
+                LOGGER.info(f'Combined Dataset: {combined_dataset.__len__()}')
                 train_augment = DataLoader(combined_dataset, batch_size=batch_size, sampler=train_sampler)
             # train_loader = DataLoader(augmented_images, batch_size=batch_size, )
             # ===================================================================================================
@@ -402,7 +404,9 @@ if __name__ == '__main__':
 
             # ======================= Save model if new high accuracy ======================= #
             if test_acc_epoch > best_acc:
+                LOGGER.info('='*30)
                 LOGGER.info(f'New High Acc: <<<<< {test_acc_epoch} >>>>>')
+                LOGGER.info('='*30)
 
                 best_acc = test_acc_epoch
                 best_model_wts = copy.deepcopy(model.state_dict())
@@ -426,11 +430,6 @@ if __name__ == '__main__':
 
         np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy',
                 cf_matrix)
-
-        # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
-        # wandb.log({"Fold Test": {"test_loss" : test_loss,
-        #                          "test_acc" : test_acc}})
 
         logger.add_scalar('Fold/Acc', test_acc, fold)
         logger.add_scalar('Fold/Loss', test_loss, fold)
