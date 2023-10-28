@@ -61,10 +61,10 @@ X = X.reshape(X.shape[0], -1)
 print('splitting data')
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-
 # Convert input data to uint8
 X_train = (X_train * 255).astype(np.uint8)
 X_test = (X_test * 255).astype(np.uint8)
+
 # Define a list of augmentation techniques
 augmentations = [
         None,
@@ -110,6 +110,7 @@ for augmentation in augmentations:
 
 with open(f'./reports/metrics_All_data.txt', 'w+')as metrics:
     metrics.write(str(augmentation_reports))
+
 # Print the classification report for each augmentation technique and class
 for augmentation, class_reports in augmentation_reports.items():
     print("=" * 40)
