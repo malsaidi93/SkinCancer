@@ -71,8 +71,10 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
 
     classes_to_augment = []
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
-    
-    # print(f'Classification Report:\n {classification_rep} \nClass_names: {class_names}\n Class_Keys: {classification_rep.keys()}')
+    # print('=' * 20)
+    # print(f'Classification Report:\n {classification_rep}')
+    # print('=' * 20)
+
     for class_id in classification_rep.keys():
         if class_id in  class_names:
             if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
@@ -107,8 +109,11 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
     return valid_loss, val_correct, classes_to_augment
 
 def batch_distribution(dataloader):
-    classes = [label for _, label in dataloader]
-    return Counter(classes)
+    combined_batches = []
+    for _, label in dataloader:
+        combined_batches.extend(label.cpu().numpy().tolist())
+    
+    return Counter(combined_batches)
 
 def test_inference(model, device, dataloader, loss_fn, class_names):
     test_loss, test_correct = 0.0, 0
@@ -314,27 +319,29 @@ if __name__ == '__main__':
         augment_phase = False
         # ======================= Train per fold ======================= #
         for epoch in range(args.epochs):
+            LOGGER.info(f'Epoch: {epoch}/{args.epochs}')
             start_epoch = time.time()
             # print(f'Epoch :: {epoch}')
             step += 1
-            classes_to_augment = []
+            
             if augment_phase:
+                print('=' * 20)
                 
                 datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
                 train_aug = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
-                train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)
                 
-                print('=' * 20)
-                print(f'Classes_to_Augment: {classes_to_augment}')
                 print(f'Batch Distribution: {batch_distribution(train_aug)}')
                 print('=' * 20)
+                
+                train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)
+                
                 
             else:
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
                 augment_phase = True
                 
-            val_loss, val_correct, c = valid_epoch(model, device, val_loader, criterion, dataset.classes)
-            classes_to_augment = c
+            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
+            LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
             
             
             # ===================================================================================================
@@ -371,12 +378,12 @@ if __name__ == '__main__':
             end_epoch = time.time()
             # print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG
             # Training Acc: {train_acc} % \t Validation Acc {val_acc}")
-            LOGGER.info(f'Epoch: {epoch}/{args.epochs}')
+            
             LOGGER.info(f'Average Training Loss: {train_loss}')
             LOGGER.info(f'Average Validation Loss: {val_loss}')
             LOGGER.info(f'Average Training Acc: {train_acc}')
             LOGGER.info(f'Average Validation acc: {val_acc}')
-            LOGGER.info(f'Time/Epoch : {(start_epoch - end_epoch)/60} minutes')
+            LOGGER.info(f'Time/Epoch : {(end_epoch - start_epoch)/60} minutes')
 
             # test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
             # test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
