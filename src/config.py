@@ -15,7 +15,7 @@ def args_parser():
     parser.add_argument('--batch', type=int, default=8,
                         help='batch size')
     
-    parser.add_argument('--threshold_aug', type=float, default=0.7,
+    parser.add_argument('--threshold_aug', type=float, default=0.3,
                         help='batch size')
 
     parser.add_argument('--model', type=str, default='resnet', help='model name')

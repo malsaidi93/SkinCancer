@@ -44,7 +44,7 @@ import wandb
 
 import datetime
 from models import *
-from dataset import SkinCancer, SkinCancerCustom, CombinedDataset
+from dataset import SkinCancer, SkinCancerCustom, CombinedDataset, SkinCancerWithAugmentation
 from torch.utils.tensorboard import SummaryWriter
 
 import warnings
