@@ -90,7 +90,8 @@ class SkinCancer(Dataset):
     def __len__(self):
         return len(self.image_paths)
     
-
+    def __distribution__(self):
+            return dict(self.df['dx'].value_counts())
     
     # def __distribution__(self):
     #     # # data_dir = self.root_dir + '/train'
@@ -174,7 +175,7 @@ class SkinCancerWithAugmentation(Dataset):
         return len(self.image_paths)
 
     def __distribution__(self):
-            return self.df['']
+            return dict(self.df['dx'].value_counts())
             
     def __getitem__(self, idx):
         
@@ -184,7 +185,7 @@ class SkinCancerWithAugmentation(Dataset):
         
         transform = transforms.Compose([
             transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomPerspective([]),
+            transforms.RandomPerspective(),
             transforms.RandomGrayscale(p=0.2),  
             transforms.ToTensor(),
         ])

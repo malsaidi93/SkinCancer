@@ -48,6 +48,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer,):
         train_loss += loss.item() * images.size(0)
         scores, predictions = torch.max(output.data, 1)
         train_correct += (predictions == labels).sum().item()
+        # print(f'train_epoch(): Batch => {Counter(labels.cpu().numpy().tolist())}')
                     
     return train_loss,train_correct
   
@@ -299,49 +300,60 @@ if __name__ == '__main__':
         iaa.CropAndPad(percent=(-0.05, 0.1), pad_mode=ia.ALL, pad_cval=(0, 255)),
         iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5))
     ])
+    
+    augment_phase = False
     for fold, (train_idx, val_idx) in enumerate(splits.split(np.arange(len(dataset)))):
 
         LOGGER.info('Fold: {}, Model: {}'.format(fold, model._get_name()))
-
         # model.load_state_dict(MODEL_WEIGHTS) # uncomment to start fresh for each fold
-
         model.to(device)
-
         train_sampler = SubsetRandomSampler(train_idx)
         test_sampler = SubsetRandomSampler(val_idx)
 
-        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)  # train, will change for each fold
-      
+        if augment_phase:
+            LOGGER.info('=' * 20)
+            LOGGER.info(f'Augmentation Phase: {augment_phase}')  
+            datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
+            train_loader = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
+            # LOGGER.info(f'Batch Distribution Train(AUG): {batch_distribution(train_aug)}')
+            LOGGER.info('=' * 20)
+            
+            # train_loss, tr0ain_correct = train_epoch(model, device, train_loader, criterion, optimizer)
+        else:
+            train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
+            augment_phase = True
+                
         val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)  # validation
         test_loader = DataLoader(test_dataset, batch_size=batch_size)  # hold out set, test once at the end of each fold
 
-        LOGGER.info('Fold: {}, Model: {}, Data Loaded..'.format(fold, model._get_name()))
-        augment_phase = False
+        # LOGGER.info('Fold: {}, Model: {}, Data Loaded..'.format(fold, model._get_name()))
+        # LOGGER.info(f'Distribution: Train + Valid => {train_loader.dataset.__distribution__()}')
+        # LOGGER.info(f'Class_name: ID => {train_loader.dataset.class_to_id}')
+        
         # ======================= Train per fold ======================= #
+        
         for epoch in range(args.epochs):
             LOGGER.info(f'Epoch: {epoch}/{args.epochs}')
             start_epoch = time.time()
             # print(f'Epoch :: {epoch}')
             step += 1
             
-            if augment_phase:
-                print('=' * 20)
-                
-                datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
-                train_aug = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
-                
-                print(f'Batch Distribution: {batch_distribution(train_aug)}')
-                print('=' * 20)
-                
-                train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)
-                
-                
-            else:
-                train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-                augment_phase = True
-                
-            val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
-            LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
+            # if augment_phase:
+            #     LOGGER.info('=' * 20)
+            #     datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
+            #     train_aug = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
+            #     # LOGGER.info(f'Batch Distribution Train(AUG): {batch_distribution(train_aug)}')
+            #     LOGGER.info('=' * 20)
+            #     train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)    
+            # else:
+            #     train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
+            #     # LOGGER.info(f'Batch Distribution Train(ORG): {batch_distribution(train_loader)}')
+            #     augment_phase = True
+            
+            train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
+            # val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
+            # LOGGER.info(f'Batch Distribution Valid: {batch_distribution(val_loader)}')
+            # LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
             
             
             # ===================================================================================================
@@ -363,8 +375,9 @@ if __name__ == '__main__':
             # ===================================================================================================
             
             # Validation Metrics
-            val_loss = val_loss / len(val_loader.sampler)
-            val_acc = val_correct / len(val_loader.sampler) * 100
+            # val_loss = val_loss / len(val_loader.sampler)
+            # val_acc = val_correct / len(val_loader.sampler) * 100
+            
             
             
             # test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
@@ -373,16 +386,16 @@ if __name__ == '__main__':
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
-            val_loss = val_loss / len(val_loader.sampler)
-            val_acc = val_correct / len(val_loader.sampler) * 100
+            # val_loss = val_loss / len(val_loader.sampler)
+            # val_acc = val_correct / len(val_loader.sampler) * 100
             end_epoch = time.time()
             # print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG
             # Training Acc: {train_acc} % \t Validation Acc {val_acc}")
             
             LOGGER.info(f'Average Training Loss: {train_loss}')
-            LOGGER.info(f'Average Validation Loss: {val_loss}')
+            # LOGGER.info(f'Average Validation Loss: {val_loss}')
             LOGGER.info(f'Average Training Acc: {train_acc}')
-            LOGGER.info(f'Average Validation acc: {val_acc}')
+            # LOGGER.info(f'Average Validation acc: {val_acc}')
             LOGGER.info(f'Time/Epoch : {(end_epoch - start_epoch)/60} minutes')
 
             # test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
@@ -391,64 +404,78 @@ if __name__ == '__main__':
             # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
             # ======================= Save per Epoch ======================================= #
 
-            logger.add_scalars('Loss', {'train': train_loss, 'val': val_loss }, step)
+            # logger.add_scalars('Loss', {'train': train_loss, 'val': val_loss }, step)
 
-            logger.add_scalars('Acc', {'train': train_acc, 'val': val_acc }, step)
+            # logger.add_scalars('Acc', {'train': train_acc, 'val': val_acc }, step)
 
             # ======================= Save model if new high accuracy ======================= #
-            if val_acc > best_acc:
-                LOGGER.info(f'New High Val Acc: <<<<< {val_acc} >>>>>')
-
-                best_acc = val_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
-                torch.save(model.state_dict(),
-                           f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
-
-                # Save Scripted Model 
-                scripted_model = torch.jit.script(model)
-                torch.jit.save(scripted_model,
-                               f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
-
-        # ======================= Test Model on HOS ======================= #
-
-        test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model, device, test_loader, criterion,
-                                                                            class_names)
-
-        logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
-
-        test_loss = test_loss / len(test_loader.sampler)
-        test_acc = test_correct / len(test_loader.sampler) * 100
-
-        np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy',
-                cf_matrix)
-
-        # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
-        # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
-        # wandb.log({"Fold Test": {"test_loss" : test_loss,
-        #                          "test_acc" : test_acc}})
-
-        logger.add_scalar('Fold/Acc', test_acc, fold)
-        logger.add_scalar('Fold/Loss', test_loss, fold)
-        
-        LOGGER.info(f'Test Acc: {test_acc}')
-        LOGGER.info(f'Test Test Loss: {test_loss}')
-
-        #
-
-        # ======================= Save model if new high accuracy ======================= #
-        if test_acc > best_acc:
-            # print('#'*25)
-            LOGGER.info(f'New High Acc: <<<<< {test_acc} >>>>>')
-            # print('#'*25)
-            best_acc = test_acc
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(model.state_dict(),
-                       f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
+                           f'../models/v2.0/{model._get_name()}_Epoch-{step}.pth')
+            
+            # if val_acc > best_acc:
+            #     LOGGER.info(f'New High Val Acc: <<<<< {val_acc} >>>>>')
 
-            # Save Scripted Model 
-            scripted_model = torch.jit.script(model)
-            torch.jit.save(scripted_model,
-                           f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
+            #     best_acc = val_acc
+            #     best_model_wts = copy.deepcopy(model.state_dict())
+            #     torch.save(model.state_dict(),
+            #                f'../models/v2.0/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
+
+                # Save Scripted Model 
+                # scripted_model = torch.jit.script(model)
+                # torch.jit.save(scripted_model,
+                #                f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
+
+        # ======================= Test Model on HOS ======================= #
+        val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
+        
+        # Validation Metrics
+        val_loss = val_loss / len(val_loader.sampler)
+        val_acc = val_correct / len(val_loader.sampler) * 100
+        
+        LOGGER.info(f'Average Validation Loss: {val_loss}')
+        LOGGER.info(f'Average Validation acc: {val_acc}')
+        
+        
+        
+    test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model, device, test_loader, criterion,
+                                                                        class_names)
+
+    # logger.add_figure("Confusion Matrix Fold", cf_figure_fold, fold)
+
+    test_loss = test_loss / len(test_loader.sampler)
+    test_acc = test_correct / len(test_loader.sampler) * 100
+
+    np.save(f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_{args.finetune}_Fold{fold}.npy',
+            cf_matrix)
+
+    # print("Fold:{}/{}\nTesting Loss:{:.3f} \t Testing Acc:{:.3f}% ".format(fold,test_loss, test_acc))
+    # print(f"Fold:{fold}\nTesting Loss:{test_loss} \t Testing Acc:{test_acc}%")
+    # wandb.log({"Fold Test": {"test_loss" : test_loss,
+    #                          "test_acc" : test_acc}})
+
+    logger.add_scalar('Fold/Acc', test_acc, fold)
+    logger.add_scalar('Fold/Loss', test_loss, fold)
+    
+    LOGGER.info(f'Test Acc: {test_acc}')
+    LOGGER.info(f'Test Test Loss: {test_loss}')
+
+    #
+
+    # ======================= Save model if new high accuracy ======================= #
+    if test_acc > best_acc:
+        # print('#'*25)
+        LOGGER.info(f'New High Acc: <<<<< {test_acc} >>>>>')
+        # print('#'*25)
+        best_acc = test_acc
+        best_model_wts = copy.deepcopy(model.state_dict())
+        torch.save(model.state_dict(),
+                    f'../models/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
+
+        # Save Scripted Model 
+        scripted_model = torch.jit.script(model)
+        torch.jit.save(scripted_model,
+                        f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
 
     end_train = time.time()
     time_elapsed = start_t - end_train
