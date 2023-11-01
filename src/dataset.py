@@ -183,19 +183,19 @@ class SkinCancerWithAugmentation(Dataset):
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
         
-        transform = transforms.Compose([
-            transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomPerspective(),
-            transforms.RandomGrayscale(p=0.2),  
-            transforms.ToTensor(),
-        ])
+        # transform = transforms.Compose([
+        #     transforms.RandomHorizontalFlip(p=0.5),
+        #     transforms.RandomPerspective(),
+        #     transforms.RandomGrayscale(p=0.2),  
+        #     transforms.ToTensor(),
+        # ])
         
-        if label in self.classes_to_augment:
-            image_tensor = transform(image)
-        else:
-            image_tensor = transforms.ToTensor()(image)
+        # if label in self.classes_to_augment:
+        #     image_tensor = transform(image)
+        # else:
+        #     image_tensor = transforms.ToTensor()(image)
         
-        
+        image_tensor = transforms.ToTensor()(image)
         # x = random.choice(aug_list)
         # image_tensor = augment(image,x)
         
