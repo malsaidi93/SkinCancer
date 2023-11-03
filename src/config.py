@@ -5,7 +5,7 @@ def args_parser():
     parser = argparse.ArgumentParser()
 
     # federated arguments (Notation for the arguments followed from paper)
-    parser.add_argument('--epochs', type=int, default=1,
+    parser.add_argument('--epochs', type=int, default=10,
                         help="number of rounds of training")
     
 
@@ -36,6 +36,8 @@ def args_parser():
                         of optimizer")
     
     parser.add_argument('--modality', type=str, default='augmented', help="type of data [original or augmented or GAN]")
+    
+    parser.add_argument('--aug-type', type=str, default='None', help="type of data [original or augmented or GAN]")
     
     parser.add_argument('--imbalanced', type=bool, default=False, help="To use cuda, set \
                         to a specific GPU ID. Default set to use CPU.")

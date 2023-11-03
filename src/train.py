@@ -1,5 +1,12 @@
 from imports import *
 from transform_list import transform as T
+
+"""
+Augmentations With F1: uncomment line 16-27, and comment tranforms in dataset file to only resize and toTensor
+All_ augmentation : Put the tranforms in dataset.py file and comment the limitation of only F1 augmentations
+
+"""
+
 augmentations = iaa.Sequential([
         iaa.Fliplr(0.5),
         iaa.Flipud(0.5),
@@ -7,16 +14,20 @@ augmentations = iaa.Sequential([
         iaa.CropAndPad(percent=(-0.05, 0.1), pad_mode=ia.ALL, pad_cval=(0, 255)),
         iaa.Sharpen(alpha=(0, 1.0), lightness=(0.75, 1.5))
     ])
-
 transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.RandomHorizontalFlip(),  # Random horizontal flip
-    transforms.RandomVerticalFlip(),  # Random vertical flip
-    transforms.RandomRotation(10),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
-    transforms.RandomGrayscale(p=0.2),  # Randomly convert to grayscale
-    transforms.ToTensor(),
-    ])
+                            # transforms.ToTensor(),
+                            transforms.ToPILImage(),
+                            transforms.RandomHorizontalFlip(),  # Random horizontal flip
+                            transforms.RandomVerticalFlip(),  # Random vertical flip
+                            transforms.RandomRotation(200),
+                            # transforms.RandomPerspective(),
+                            # transforms.RandomAffine(degrees=15, translate=(0.1, 0.1), scale=(0.9, 1.1), shear=15),  # Random affine transformation
+                            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                            transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
+                            # transforms.Resize((224,224)),
+                            transforms.ToTensor(),
+                            # transforms.Normalize([0.5], [0.5])
+                            ])
 
 def plot_confusion_matrix(cm, class_names):
     """
@@ -26,7 +37,6 @@ def plot_confusion_matrix(cm, class_names):
        cm (array, shape = [n, n]): a confusion matrix of integer classes
        class_names (array, shape = [n]): String names of the integer classes
     """
-
     figure = plt.figure(figsize=(8, 8))
     plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
     plt.title("Confusion matrix")
@@ -56,21 +66,15 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, classes_to_augmen
     model.train()
     
     for images, labels in dataloader:
-        
-        # labels_list = labels.cpu().numpy()
-        # images_list = images.cpu().numpy()
-        # if len(classes_to_augment) > 0:
-        #     # print(f'Train_epoch(): Classes_to_augment => {classes_to_augment}')
-        #     for idx, label in enumerate(labels_list):
-        #         # print(f'train_epoch(): Label => {dataset.class_id[label]}')
-        #         if dataset.class_id[labels_list[idx]] in classes_to_augment:
-        #             images_list[idx] = transform(images_list[idx])
-        if len(classes_to_augment) > 0:
-            # print(f'Train_epoch(): Classes_to_augment => {classes_to_augment}')
-            for idx, label in enumerate(labels.tolist()):
-                
-                if dataset.class_id[label] in classes_to_augment:
-                    images[idx] = transform(images[idx])
+        if args.modality == 'augmented':    
+            if len(classes_to_augment) > 0:
+                # print(f'Train_epoch(): Classes_to_augment => {classes_to_augment}')
+                for idx, label in enumerate(labels.tolist()):
+                    
+                    if dataset.class_id[label] in classes_to_augment:
+                        images[idx] = transform(images[idx])
+        elif args.modality == 'original':
+            images = images
         
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
@@ -84,7 +88,7 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, classes_to_augmen
         # print(f'train_epoch(): Batch => {Counter(labels.cpu().numpy().tolist())}')
                     
     return train_loss,train_correct
-  
+
 def valid_epoch(model,device,dataloader,loss_fn, class_names):
     valid_loss, val_correct = 0.0, 0
     model.eval()
@@ -102,39 +106,18 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
 
     classes_to_augment = []
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
-
-
+    
+    LOGGER.info(f'='*20)
+    LOGGER.info(f'Classification Report:')
+    for key, values in classification_rep.items():
+        LOGGER.info(f'{key} => {values}')
+    LOGGER.info(f'='*20)
     for class_id in classification_rep.keys():
         if class_id in  class_names:
             if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
                 classes_to_augment.append(class_id)
     
-    # print()
-    #         y_t.append(labels.cpu().numpy())
-    #         y_p.append(predictions.cpu().numpy())
-
-    # y_true = np.array(y_true)
-    # y_pred = np.array(y_pred)
-    #     cf_matrix = confusion_matrix(y_true, y_pred)
-
-    #     f_l = [f1_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
-    #     p_l = [precision_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
-    #     r_l = [recall_score(p.cpu().numpy(), t.cpu().numpy(), average='macro') for t,p in zip(y_t, y_p)]
-    #     # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
-
-    #     f1_s = sum(f_l)/len(f_l)
-    #     # print('f1:', f1_s)
-    #     p_s = sum(p_l)/len(p_l)
-    #     r_s = sum(r_l)/len(r_l)
-
-    #     df = {'F1_Score' : f1_s,
-    #           'Precision' : p_s,
-    #           'Recall' : r_s}
-
-    #     metrics_table.add_data(data=df)
-
-    #     wandb.log({"TrainingConfusionMatrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
-
+    
     return valid_loss, val_correct, classes_to_augment
 
 def batch_distribution(dataloader):
@@ -165,6 +148,11 @@ def test_inference(model, device, dataloader, loss_fn, class_names):
         y_p.append(predictions.cpu().numpy())
 
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
+    LOGGER.info(f'='*20)
+    LOGGER.info(f'Test_inferenece(): Classification Report: \n')
+    for key, values in classification_rep.items():
+        LOGGER.info(f'{key} => {values}')
+    LOGGER.info(f'='*20)
     cf_matrix = confusion_matrix(y_true, y_pred)
     cf_figure = plot_confusion_matrix(cf_matrix, class_names)
 
@@ -198,17 +186,13 @@ if __name__ == '__main__':
     # Set device parameter
     if args.gpu:
         if os.name == 'posix' and torch.backends.mps.is_available():  # device is mac m1 chip
-            # LOGGER.info(f"Device Type : Using MPS")
             device = 'mps'
         elif os.name == 'nt' and torch.cuda.is_available():  # device is windows with cuda
-            # LOGGER.info(f'Device Type : Using CUDA')
             device = args.device
         else:
-            # LOGGER.info(f'Device Type : Using CPU')
             device = 'cpu'
 
     # Initialize metrics table to log metrics to wandb
-
     # metrics_table = wandb.Table(columns=['F1_Score','Precision','Recall'])
 
     # ======================= DATA ======================= #
@@ -224,20 +208,6 @@ if __name__ == '__main__':
 
     if args.model == 'efficientnet':
         model = efficientnet()
-
-        # if args.finetune:
-        #     model.classifier = nn.Sequential(
-        #     nn.BatchNorm1d(num_features=1280),    
-        #     nn.Linear(num_features, 512),
-        #     nn.ReLU(),
-        #     nn.BatchNorm1d(512),
-        #     nn.Linear(512, num_features),
-        #     nn.ReLU(),
-        #     nn.BatchNorm1d(num_features=1280),
-        #     nn.Dropout(0.4),
-        #     nn.Linear(1280, 7),
-        #     )
-
 
     elif args.model == 'resnet':
         model = resnet()
@@ -282,7 +252,6 @@ if __name__ == '__main__':
     # ======================= Logger ======================= #      
 
     if args.logger == 'tb':
-
         logger = SummaryWriter(log_dir=f'../tb_logs/{model._get_name()}/{args.modality}_{args.epochs}Epochs')
 
     elif args.logger == 'wb':
@@ -313,7 +282,7 @@ if __name__ == '__main__':
 
     # ======================= Local Logger ======================= #
 
-    exp_dir = f'../tb_logs/logs/{model._get_name()}_50Aug_{args.epochs}/'
+    exp_dir = f'../tb_logs/logs/{model._get_name()}_{args.modality}_{args.epochs}/'
     os.makedirs(exp_dir, exist_ok=True)
     log_file = f"{exp_dir}/log.log"
     LOGGER = logging.getLogger(__name__)
@@ -330,26 +299,8 @@ if __name__ == '__main__':
         train_sampler = SubsetRandomSampler(train_idx)
         test_sampler = SubsetRandomSampler(val_idx)
 
-        # if augment_phase:
-        #     LOGGER.info('=' * 20)
-        #     LOGGER.info(f'Augmentation Phase: {augment_phase}')  
-        #     # datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
-        #     # train_loader = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
-        #     # LOGGER.info(f'Batch Distribution Train(AUG): {batch_distribution(train_aug)}')
-        #     LOGGER.info('=' * 20)
-            
-        #     # train_loss, tr0ain_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-        # else:
-        #     train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
-        #     # comment this if you want to use the same dataloader
-        #     # augment_phase = True
         train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)        
         val_loader = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)  # validation
-        # test_loader = DataLoader(test_dataset, batch_size=batch_size)  # hold out set, test once at the end of each fold
-
-        # LOGGER.info('Fold: {}, Model: {}, Data Loaded..'.format(fold, model._get_name()))
-        # LOGGER.info(f'Distribution: Train + Valid => {train_loader.dataset.__distribution__()}')
-        # LOGGER.info(f'Class_name: ID => {train_loader.dataset.class_to_id}')
         
         # ======================= Train per fold ======================= #
         
@@ -357,129 +308,61 @@ if __name__ == '__main__':
             step += 1
             LOGGER.info(f'Epoch: {epoch + 1}/{args.epochs}')
             start_epoch = time.time()
-            # print(f'Epoch :: {epoch}')
             
-            # if augment_phase:
-            #     LOGGER.info('=' * 20)
-            #     datasetAug = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None, classes_to_augment=classes_to_augment)
-            #     train_aug = DataLoader(datasetAug, batch_size=batch_size, sampler=train_sampler)
-            #     # LOGGER.info(f'Batch Distribution Train(AUG): {batch_distribution(train_aug)}')
-            #     LOGGER.info('=' * 20)
-            #     train_loss, train_correct = train_epoch(model, device, train_aug, criterion, optimizer)    
-            # else:
-            #     train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
-            #     # LOGGER.info(f'Batch Distribution Train(ORG): {batch_distribution(train_loader)}')
-            #     augment_phase = True
             if augment_phase:
-                LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
+                # LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer, classes_to_augment)
             
             else:
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
                 
-            # val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
-            # LOGGER.info(f'Batch Distribution Valid: {batch_distribution(val_loader)}')
-            # LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
-            
-            
-            # ===================================================================================================
-            #    v2.0 - Augmenting Images of classes with low f1-score
-            # ===================================================================================================
-            # if not augment_phase:
-            #     LOGGER.info(f'Classes_to_Augment: {classes_to_augment}')
-                
-            #     # augment the images of classes with low f1-score
-            #     for images, labels in train_loader:
-            #         labels_list = labels.cpu().numpy()
-            #         images_list = images.cpu().numpy()
-            #         # print(f"Batch: Labels => {labels}")
-            #         # get the images of the classes to augment 
-            #         for idx, label in enumerate(labels_list):
-            #             if dataset.class_id[label] in classes_to_augment:
-            #                 augmented_images.append(augmentations.augment_images(images=images_list[idx]))
-                
-            # ===================================================================================================
-            
-            # Validation Metrics
-            # val_loss = val_loss / len(val_loader.sampler)
-            # val_acc = val_correct / len(val_loader.sampler) * 100
-            
-            
-            
-            # test_loss_epoch, test_acc_epoch, cf_figure, _ = test_inference(model, device, test_loader, criterion,
-            #                                                                class_names)
-            # logger.add_figure("Confusion Matrix Epoch", cf_figure, step)
 
             train_loss = train_loss / len(train_loader.sampler)
             train_acc = train_correct / len(train_loader.sampler) * 100
-            # val_loss = val_loss / len(val_loader.sampler)
-            # val_acc = val_correct / len(val_loader.sampler) * 100
             end_epoch = time.time()
-            # print(f"Epoch: {epoch}/{args.epochs},\n AVG Training Loss:{train_loss} \t Validation Loss{val_loss}\nAVG
-            # Training Acc: {train_acc} % \t Validation Acc {val_acc}")
-            
+
             LOGGER.info(f'Average Training Loss: {train_loss}')
-            # LOGGER.info(f'Average Validation Loss: {val_loss}')
             LOGGER.info(f'Average Training Acc: {train_acc}')
-            # LOGGER.info(f'Average Validation acc: {val_acc}')
             LOGGER.info(f'Time/Epoch : {(end_epoch - start_epoch)/60} minutes')
-
-            # test_loss_epoch = test_loss_epoch / len(test_loader.sampler)
-            # test_acc_epoch = test_acc_epoch / len(test_loader.sampler) * 100
-
-            # print("Epoch:{}/{}\nAVG Training Loss:{:.3f} \t Testing Loss:{:.3f}\nAVG Training Acc: {:.2f} % \t Testing Acc {:.2f} % ".format(epoch, args.epochs, train_loss,  val_loss, train_acc,  val_acc))
-            # ======================= Save per Epoch ======================================= #
-
-            # logger.add_scalars('Loss', {'train': train_loss, 'val': val_loss }, step)
-
-            # logger.add_scalars('Acc', {'train': train_acc, 'val': val_acc }, step)
+            
+            logger.add_scalar('Epoch/Accuracy', train_acc, step)
+            logger.add_scalar('Epoch/Loss', train_loss, step)
 
             # ======================= Save model if new high accuracy ======================= #
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(model.state_dict(),
-                           f'../models/v2.0/{model._get_name()}50Aug_Epoch-{step}.pth')
+                           f'../models/{model._get_name()}-{args.epochs}Epochs-{step}.pth')
             
-            # if val_acc > best_acc:
-            #     LOGGER.info(f'New High Val Acc: <<<<< {val_acc} >>>>>')
-
-            #     best_acc = val_acc
-            #     best_model_wts = copy.deepcopy(model.state_dict())
-            #     torch.save(model.state_dict(),
-            #                f'../models/v2.0/{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
-
-                # Save Scripted Model 
-                # scripted_model = torch.jit.script(model)
-                # torch.jit.save(scripted_model,
-                #                f'../models/scripted_{model._get_name()}_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
-
         # ======================= Test Model on HOS ======================= #
         val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
         augment_phase = True
+        LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
+        
         # Validation Metrics
         val_loss = val_loss / len(val_loader.sampler)
         val_acc = val_correct / len(val_loader.sampler) * 100
         
         LOGGER.info(f'Average Validation Loss: {val_loss}')
         LOGGER.info(f'Average Validation acc: {val_acc}')
+        logger.add_scalar('Fold/Acc', val_acc, fold)
+        logger.add_scalar('Fold/Loss', val_loss, fold)
         
         
     test_loader = DataLoader(test_dataset, batch_size=batch_size) 
-    LOGGER.info(f'Batch Distribution Test: {batch_distribution(test_loader)}')   
+    # LOGGER.info(f'Batch Distribution Test: {batch_distribution(test_loader)}')   
     test_loss, test_correct, cf_figure_fold, cf_matrix = test_inference(model, device, test_loader, criterion,
                                                                         class_names)
 
     test_loss = test_loss / len(test_loader.sampler)
     test_acc = test_correct / len(test_loader.sampler) * 100
-    cf_path = f'../output_files/cf_matrix/{model._get_name()}_50AUG_{args.modality}_{args.finetune}_Fold{fold}.npy'
+    cf_path = f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_Test.npy'
     np.save(cf_path, cf_matrix)
 
-    logger.add_scalar('Fold/Acc', test_acc, fold)
-    logger.add_scalar('Fold/Loss', test_loss, fold)
+    # logger.add_scalar('Test Acc', test_acc, fold)
+    # logger.add_scalar('Test Loss', test_loss, fold)
     
     LOGGER.info(f'Test Acc: {test_acc}')
     LOGGER.info(f'Test Loss: {test_loss}')
-
-    #
 
     # ======================= Save model if new high accuracy ======================= #
     if test_acc > best_acc:
@@ -487,12 +370,12 @@ if __name__ == '__main__':
         best_acc = test_acc
         best_model_wts = copy.deepcopy(model.state_dict())
         torch.save(model.state_dict(),
-                    f'../models/{model._get_name()}_50Aug_{args.modality}_{args.finetune}_{args.epochs}Epochs.pth')
+                    f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
 
         # Save Scripted Model 
         scripted_model = torch.jit.script(model)
         torch.jit.save(scripted_model,
-                        f'../models/scripted_{model._get_name()}_50Aug_{args.modality}_{args.finetune}_{args.epochs}Epochs.pt')
+                        f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
 
     end_train = time.time()
     time_elapsed = start_t - end_train
