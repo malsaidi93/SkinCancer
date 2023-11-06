@@ -82,8 +82,8 @@ class SkinCancer(Dataset):
                                             transforms.ToTensor(),
                                             # transforms.RandomHorizontalFlip(),  # Random horizontal flip
                                             # transforms.RandomVerticalFlip(),  # Random vertical flip
-                                            transforms.RandomRotation(20),
-                                            # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                                            # transforms.RandomRotation(20),
+                                            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
