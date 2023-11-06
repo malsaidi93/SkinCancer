@@ -66,15 +66,15 @@ def train_epoch(model, device, dataloader, loss_fn, optimizer, classes_to_augmen
     model.train()
     
     for images, labels in dataloader:
-        if args.modality == 'augmented':    
-            if len(classes_to_augment) > 0:
-                # print(f'Train_epoch(): Classes_to_augment => {classes_to_augment}')
-                for idx, label in enumerate(labels.tolist()):
+        # if args.modality == 'augmented':    
+        #     if len(classes_to_augment) > 0:
+        #         # print(f'Train_epoch(): Classes_to_augment => {classes_to_augment}')
+        #         for idx, label in enumerate(labels.tolist()):
                     
-                    if dataset.class_id[label] in classes_to_augment:
-                        images[idx] = transform(images[idx])
-        elif args.modality == 'original':
-            images = images
+        #             if dataset.class_id[label] in classes_to_augment:
+        #                 images[idx] = transform(images[idx])
+        # elif args.modality == 'original':
+        #     images = images
         
         images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad()
@@ -153,6 +153,10 @@ def test_inference(model, device, dataloader, loss_fn, class_names):
     for key, values in classification_rep.items():
         LOGGER.info(f'{key} => {values}')
     LOGGER.info(f'='*20)
+    
+    with open(f'../tb_logs/reports/{args.aug_type}.txt', 'w+') as report:
+        report.write(str(classification_rep))
+        
     cf_matrix = confusion_matrix(y_true, y_pred)
     cf_figure = plot_confusion_matrix(cf_matrix, class_names)
 
@@ -252,7 +256,7 @@ if __name__ == '__main__':
     # ======================= Logger ======================= #      
 
     if args.logger == 'tb':
-        logger = SummaryWriter(log_dir=f'../tb_logs/{model._get_name()}/{args.modality}_{args.epochs}Epochs')
+        logger = SummaryWriter(log_dir=f'../tb_logs/{model._get_name()}/{args.modality}_{args.epochs}Epochs_{args.aug_type}')
 
     elif args.logger == 'wb':
         wandb.login(key="7a2f300a61c6b3c4852452a09526c40098020be2")
@@ -282,7 +286,7 @@ if __name__ == '__main__':
 
     # ======================= Local Logger ======================= #
 
-    exp_dir = f'../tb_logs/logs/{model._get_name()}_{args.modality}_{args.epochs}/'
+    exp_dir = f'../tb_logs/logs/{model._get_name()}_{args.modality}_{args.epochs}_{args.aug_type}/'
     os.makedirs(exp_dir, exist_ok=True)
     log_file = f"{exp_dir}/log.log"
     LOGGER = logging.getLogger(__name__)
@@ -331,7 +335,7 @@ if __name__ == '__main__':
             # ======================= Save model if new high accuracy ======================= #
             best_model_wts = copy.deepcopy(model.state_dict())
             torch.save(model.state_dict(),
-                           f'../models/{model._get_name()}-{args.epochs}Epochs-{step}.pth')
+                           f'../models/{model._get_name()}-{args.modality}-{args.aug_type}-{args.epochs}Epochs-{step}.pth')
             
         # ======================= Test Model on HOS ======================= #
         val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
@@ -355,7 +359,7 @@ if __name__ == '__main__':
 
     test_loss = test_loss / len(test_loader.sampler)
     test_acc = test_correct / len(test_loader.sampler) * 100
-    cf_path = f'../output_files/cf_matrix/{model._get_name()}_{args.modality}_Test.npy'
+    cf_path = f'../output_files/cf_matrix/{model._get_name()}_{args.aug_type}_{args.modality}_Test.npy'
     np.save(cf_path, cf_matrix)
 
     # logger.add_scalar('Test Acc', test_acc, fold)
@@ -370,12 +374,12 @@ if __name__ == '__main__':
         best_acc = test_acc
         best_model_wts = copy.deepcopy(model.state_dict())
         torch.save(model.state_dict(),
-                    f'../models/{model._get_name()}_{args.modality}_{args.epochs}Epochs.pth')
+                    f'../models/{model._get_name()}_{args.modality}_{args.aug_type}_{args.epochs}Epochs.pth')
 
         # Save Scripted Model 
         scripted_model = torch.jit.script(model)
         torch.jit.save(scripted_model,
-                        f'../models/scripted_{model._get_name()}_{args.modality}_{args.epochs}Epochs.pt')
+                        f'../models/scripted_{model._get_name()}_{args.aug_type}_{args.modality}_{args.epochs}Epochs.pt')
 
     end_train = time.time()
     time_elapsed = start_t - end_train

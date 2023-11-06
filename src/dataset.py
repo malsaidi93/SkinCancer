@@ -77,19 +77,17 @@ class SkinCancer(Dataset):
         self.class_to_id = {value:key for key,value in self.class_id.items()}
 
         self.class_count =  self.df['dx'].value_counts().to_dict()
-        self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
-        # self.transform = transforms.Compose([
-        #                                     transforms.ToTensor(),
-        #                                     transforms.RandomHorizontalFlip(),  # Random horizontal flip
-        #                                     transforms.RandomVerticalFlip(),  # Random vertical flip
-        #                                     transforms.RandomRotation(200),
-        #                                     transforms.RandomPerspective(),
-        #                                     transforms.RandomAffine(degrees=15, translate=(0.1, 0.1), scale=(0.9, 1.1), shear=15),  # Random affine transformation
-        #                                     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
-        #                                     transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
-        #                                     transforms.Resize((224,224)),
-        #                                     transforms.Normalize([0.5], [0.5])
-        #                                     ])
+        # self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
+        self.transform = transforms.Compose([
+                                            transforms.ToTensor(),
+                                            transforms.RandomHorizontalFlip(),  # Random horizontal flip
+                                            # transforms.RandomVerticalFlip(),  # Random vertical flip
+                                            # transforms.RandomRotation(200),
+                                            # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                                            # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
+                                            transforms.Resize((224,224)),
+                                            transforms.Normalize([0.5], [0.5])
+                                            ])
         self.augment_phase = augment_phase
         
 
