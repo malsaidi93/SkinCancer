@@ -154,7 +154,7 @@ def test_inference(model, device, dataloader, loss_fn, class_names):
         LOGGER.info(f'{key} => {values}')
     LOGGER.info(f'='*20)
     
-    with open(f'../tb_logs/reports/{args.aug_type}.txt', 'w+') as report:
+    with open(f'../reports/{args.aug_type}.txt', 'w+') as report:
         report.write(str(classification_rep))
         
     cf_matrix = confusion_matrix(y_true, y_pred)
