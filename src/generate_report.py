@@ -1,7 +1,7 @@
 from tabulate import tabulate
 import os
 import json
-
+import pandas as pd
 root = '../reports/'
 class_names = ['akiec', 'bcc', 'bkl', 'df', 'mel', 'nv', 'vasc']
 
@@ -24,6 +24,7 @@ def main():
 
 if __name__ == "__main__":
     combined_reports = main()
+    pd.DataFrame(combined_reports).to_excel('../reports/combined_reports.xlsx')
     headers = ["Filename", "akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
     table = []
     for filename, values in combined_reports.items():
