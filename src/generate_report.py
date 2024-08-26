@@ -23,6 +23,21 @@ def main():
 
     return combined_reports
 
+def ApplySoftmax(forSoftmax):
+    headers_transpose = ["Filename", "RandomColorJitter", "RandomGrayScale", "RandomHorizontalFlip", "RandomRotation", "RandomVerticalFlip"]
+    forSoftmax = np.array(forSoftmax).T
+    softmax_data = softmax(forSoftmax, axis=1)
+    tableSoftmax = []
+    for idx, value in enumerate(softmax_data):
+        row = [headers[idx+1]]
+        row.extend(softmax_data[idx])
+        tableSoftmax.append(row)
+    
+    print("="*10+"Softmax Probabilities Per Class"+"="*10)
+    print(tabulate(tableSoftmax, headers=headers_transpose, tablefmt="pretty"))
+    df = pd.DataFrame(tableSoftmax, columns=['Filename', 'RandomColorJitter', 'RandomGrayScale', 'RandomHorizontalFlip', 'RandomRotation', 'RandomVerticalFlip'])
+    df.to_excel('../reports/Combined_softmax.xlsx', index=False)
+    return None
 
 if __name__ == "__main__":
     combined_reports = main()
@@ -37,16 +52,9 @@ if __name__ == "__main__":
         table.append(row)
         aug.append(filename)
         forSoftmax.append(list(values.values()))
-
+    
+    print("="*10+"F1-Scores"+"="*10)
     print(tabulate(table, headers=headers, tablefmt="pretty"))
     
-    # Tabulate & Apply Softmax to F1-Scores
-    softmax_data = softmax(np.array(forSoftmax), axis=1)
+    ApplySoftmax(forSoftmax)
     
-    tableSoftmax = []
-    for idx in range(0, len(forSoftmax)):
-        row = [aug[idx]]
-        row.extend(softmax_data[idx])
-        tableSoftmax.append(row)
-
-    print(tabulate(tableSoftmax, headers=headers, tablefmt="pretty"))
