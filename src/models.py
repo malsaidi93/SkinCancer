@@ -50,7 +50,8 @@ def alexnet():
 
 
 def resnext():
-    model = models.resnext50_32x4d(weights=ResNeXt50_32X4D_Weights.DEFAULT)
+    # weights can without quotes if there is error
+    model = models.resnext50_32x4d(weights='ResNeXt50_32X4D_Weights.DEFAULT')
     old_fc = model.fc
     new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
     model.fc = new_fc

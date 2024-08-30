@@ -48,7 +48,7 @@ class CombinedDataset(Dataset):
 class SkinCancer(Dataset):
     """Skin Cancer Dataset."""
 
-    def __init__(self, root_dir, meta, transform=None, augment_phase=False,):
+    def __init__(self, root_dir, meta, transform=None, augment_phase=False):
         """
         Args:
             root_dir (string): Path to root directory containing images
@@ -77,13 +77,12 @@ class SkinCancer(Dataset):
         self.class_to_id = {value:key for key,value in self.class_id.items()}
 
         self.class_count =  self.df['dx'].value_counts().to_dict()
-        # self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
         self.transform = transforms.Compose([
                                             transforms.ToTensor(),
                                             # transforms.RandomHorizontalFlip(),  # Random horizontal flip
                                             # transforms.RandomVerticalFlip(),  # Random vertical flip
                                             # transforms.RandomRotation(20),
-                                            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                                            # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
@@ -118,7 +117,6 @@ class SkinCancer(Dataset):
 
 
     def __getitem__(self, idx):
-        
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
@@ -187,10 +185,10 @@ class SkinCancerWithAugmentation(Dataset):
         #     transforms.ToTensor(),
         # ])
         
-        # if label in self.classes_to_augment:
-        #     image_tensor = transform(image)
-        # else:
-        #     image_tensor = transforms.ToTensor()(image)
+        if label in self.classes_to_augment:
+            image_tensor = transform(image)
+        else:
+            image_tensor = transforms.ToTensor()(image)
         
         image_tensor = transforms.ToTensor()(image)
         # x = random.choice(aug_list)
