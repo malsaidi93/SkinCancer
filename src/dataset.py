@@ -48,7 +48,7 @@ class CombinedDataset(Dataset):
 class SkinCancer(Dataset):
     """Skin Cancer Dataset."""
 
-    def __init__(self, root_dir, meta, transform=None, augment_phase=False):
+    def __init__(self, root_dir, meta, transform=None, augment_phase=False, classes_to_augment=[]):
         """
         Args:
             root_dir (string): Path to root directory containing images
@@ -82,12 +82,14 @@ class SkinCancer(Dataset):
                                             # transforms.RandomHorizontalFlip(),  # Random horizontal flip
                                             # transforms.RandomVerticalFlip(),  # Random vertical flip
                                             # transforms.RandomRotation(20),
-                                            # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                                            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
                                             ])
+        self.transform_NoAug = transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224)), transforms.Normalize([0.5], [0.5])])
         self.augment_phase = augment_phase
+        self.classes_to_augment = classes_to_augment
         
 
         # self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
@@ -120,7 +122,12 @@ class SkinCancer(Dataset):
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
-        image_tensor = self.transform(image)
+        if self.augment_phase:
+            if label in self.classes_to_augment:
+                image_tensor = self.transform(image)
+        else:
+            image_tensor = self.transform_NoAug(image)
+        # image_tensor = self.transform(image)
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
@@ -178,17 +185,10 @@ class SkinCancerWithAugmentation(Dataset):
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
         
-        # transform = transforms.Compose([
-        #     transforms.RandomHorizontalFlip(p=0.5),
-        #     transforms.RandomPerspective(),
-        #     transforms.RandomGrayscale(p=0.2),  
-        #     transforms.ToTensor(),
-        # ])
-        
         if label in self.classes_to_augment:
-            image_tensor = transform(image)
+            image_tensor = self.transforms(image)
         else:
-            image_tensor = transforms.ToTensor()(image)
+            image_tensor = self.transforms.ToTensor()(image)
         
         image_tensor = transforms.ToTensor()(image)
         # x = random.choice(aug_list)
