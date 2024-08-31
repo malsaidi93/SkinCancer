@@ -169,6 +169,8 @@ class SkinCancerWithAugmentation(Dataset):
         self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
         self.augment_phase = augment_phase
         self.classes_to_augment = classes_to_augment
+        self.softmax = pd.read_excel('../reports/combined_reports.xlsx', sheet_name='Softmax_Values', index_col=0)
+        self.aug_list = self.__augmentationslist__(self.softmax)
 
     def __getclassificationreport__(self):
         
@@ -204,65 +206,46 @@ class SkinCancerWithAugmentation(Dataset):
     def __distribution__(self):
             return dict(self.df['dx'].value_counts())
             
+    def __augmentationslist__(self, df, threshold=0.20):
+        augmentations_dict = {}
+        
+        # Iterate over columns (classes)
+        for class_name in df.columns:
+            transform_list = []
+            
+            # Iterate over rows (augmentations)
+            for augmentation_name, probability in df[class_name].items():
+                if probability > threshold:
+                    if 'RandomVerticalFlip' in augmentation_name:
+                        transform_list.append(transforms.RandomVerticalFlip())
+                    elif 'RandomHorizontalFlip' in augmentation_name:
+                        transform_list.append(transforms.RandomHorizontalFlip())
+                    elif 'RandomGrayScale' in augmentation_name:
+                        transform_list.append(transforms.RandomGrayscale())
+                    elif 'RandomColorJitter' in augmentation_name:
+                        transform_list.append(transforms.ColorJitter())
+                    elif 'RandomRotation' in augmentation_name:
+                        transform_list.append(transforms.RandomRotation(30))
+            
+            # Combine the selected transforms
+            augmentations_dict[class_name] = transforms.Compose(transform_list)
+        # print(augmentations_dict)
+        return augmentations_dict
+    
     def __getitem__(self, idx):
         
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
         
-        if label in self.classes_to_augment:
-            image_tensor = self.transforms(image)
-        else:
-            image_tensor = self.transforms.ToTensor()(image)
-        
-        image_tensor = transforms.ToTensor()(image)
-        # x = random.choice(aug_list)
-        # image_tensor = augment(image,x)
-        
+        # if label in self.classes_to_augment:
+        #     image_tensor = self.transforms(image)
+        # else:
+        #     image_tensor = self.transforms.ToTensor()(image)
+        image_tensor = self.transform(image)
+        image_tensor = self.aug_list[label](image_tensor)
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
-import pandas as pd
-import torch
-import torchvision.transforms as transforms
 
-# Define the threshold
-threshold = 0.20
 
-# Load the Excel file and sheet
-df = pd.read_excel('combined_report.xlsx', sheet_name='Softmax_Values', index_col=0)
-
-# Function to create the appropriate transforms based on the probabilities
-def create_augmentations(df, threshold):
-    augmentations_dict = {}
-    
-    # Iterate over columns (classes)
-    for class_name in df.columns:
-        transform_list = []
-        
-        # Iterate over rows (augmentations)
-        for augmentation_name, probability in df[class_name].items():
-            if probability > threshold:
-                if 'VerticalFlip' in augmentation_name:
-                    transform_list.append(transforms.RandomVerticalFlip())
-                elif 'HorizontalFlip' in augmentation_name:
-                    transform_list.append(transforms.RandomHorizontalFlip())
-                elif 'GrayScale' in augmentation_name:
-                    transform_list.append(transforms.RandomGrayscale())
-                elif 'ColorJitter' in augmentation_name:
-                    transform_list.append(transforms.ColorJitter())
-                elif 'Rotation' in augmentation_name:
-                    transform_list.append(transforms.RandomRotation(30))
-        
-        # Combine the selected transforms
-        augmentations_dict[class_name] = transforms.Compose(transform_list)
-    
-    return augmentations_dict
-
-# Example usage
-augmentations = create_augmentations(df, threshold)
-
-# Now you can apply these augmentations to your data
-# Example: applying augmentations to an image tensor
-image = torch.randn(3, 224, 224)  # Randomly generated image tensor
-augmented_image = augmentations['akiec'](image)  # Apply augmentations for class 'akiec'
