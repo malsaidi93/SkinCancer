@@ -7,7 +7,9 @@ from torchvision import transforms, utils
 import pandas as pd
 from PIL import Image, ImageOps
 import random
+import json
 from sklearn.utils import class_weight
+from scipy.special import softmax
 from torch.utils.data import ConcatDataset
 # from torchvision.transforms import v2
 # from do_augmentation import augment
@@ -122,9 +124,10 @@ class SkinCancer(Dataset):
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
-        if self.augment_phase:
-            if label in self.classes_to_augment:
-                image_tensor = self.transform(image)
+        if self.augment_phase and label in self.classes_to_augment:
+            image_tensor = self.transform(image)
+            #if label in self.classes_to_augment:
+            #    image_tensor = self.transform(image)
         else:
             image_tensor = self.transform_NoAug(image)
         # image_tensor = self.transform(image)
@@ -167,11 +170,33 @@ class SkinCancerWithAugmentation(Dataset):
         self.augment_phase = augment_phase
         self.classes_to_augment = classes_to_augment
 
-        # self.class_weights = [1 - self.class_count[i]/self.df.shape[0] for i in self.classes]
-        # self.class_weights = torch.tensor(class_weight.compute_class_weight('balanced',classes=np.unique(self.df['dx'].to_numpy()),y=self.df['dx'].to_numpy()),device='cuda')
+    def __getclassificationreport__(self):
+        
+        combined_reports = {}
+        root = "../reports/" 
+        for file in os.listdir(root):
+            if file.endswith('.txt'):
+                with open(os.path.join(root, file), 'r') as f:
+                    report = json.load(f)
+                combined_reports[file] = {each_class: report[each_class]['f1-score'] for each_class in report if each_class in self.classes}
+        
+        forSoftmax = []
+        aug = []                                                                      
+        for filename, values in combined_reports.items():                             
+            row = [filename]                                                          
+            row.extend(values.values())                                               
+            aug.append(filename)                                                      
+            forSoftmax.append(list(values.values()))
+        
+        # Calculate softmax across the columns (axis=0)
+        softmax_data = softmax(forSoftmax, axis=0)
+        
+        # create Dictionary
+        softmax_dict = {}
+        for idx, probs in enumerate(softmax_data):
+            softmax_dict[probs]
+            row.extend(probs)                  
 
-
-        # self.file_names_ids = {i:v for v,i in enumerate(self.file_names)}
 
     def __len__(self):
         return len(self.image_paths)
@@ -196,3 +221,48 @@ class SkinCancerWithAugmentation(Dataset):
         
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
+
+import pandas as pd
+import torch
+import torchvision.transforms as transforms
+
+# Define the threshold
+threshold = 0.20
+
+# Load the Excel file and sheet
+df = pd.read_excel('combined_report.xlsx', sheet_name='Softmax_Values', index_col=0)
+
+# Function to create the appropriate transforms based on the probabilities
+def create_augmentations(df, threshold):
+    augmentations_dict = {}
+    
+    # Iterate over columns (classes)
+    for class_name in df.columns:
+        transform_list = []
+        
+        # Iterate over rows (augmentations)
+        for augmentation_name, probability in df[class_name].items():
+            if probability > threshold:
+                if 'VerticalFlip' in augmentation_name:
+                    transform_list.append(transforms.RandomVerticalFlip())
+                elif 'HorizontalFlip' in augmentation_name:
+                    transform_list.append(transforms.RandomHorizontalFlip())
+                elif 'GrayScale' in augmentation_name:
+                    transform_list.append(transforms.RandomGrayscale())
+                elif 'ColorJitter' in augmentation_name:
+                    transform_list.append(transforms.ColorJitter())
+                elif 'Rotation' in augmentation_name:
+                    transform_list.append(transforms.RandomRotation(30))
+        
+        # Combine the selected transforms
+        augmentations_dict[class_name] = transforms.Compose(transform_list)
+    
+    return augmentations_dict
+
+# Example usage
+augmentations = create_augmentations(df, threshold)
+
+# Now you can apply these augmentations to your data
+# Example: applying augmentations to an image tensor
+image = torch.randn(3, 224, 224)  # Randomly generated image tensor
+augmented_image = augmentations['akiec'](image)  # Apply augmentations for class 'akiec'
