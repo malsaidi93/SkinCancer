@@ -84,8 +84,11 @@ class SkinCancer(Dataset):
                                             # transforms.RandomHorizontalFlip(),  # Random horizontal flip
                                             # transforms.RandomVerticalFlip(),  # Random vertical flip
                                             # transforms.RandomRotation(20),
-                                            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
+                                            # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
+                                            # transforms.RandomInvert(0.5),
+                                            # transforms.RandomAutocontrast(0.5),
+                                            transforms.RandomAdjustSharpness(2,0.5),
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
                                             ])
@@ -104,21 +107,6 @@ class SkinCancer(Dataset):
     def __distribution__(self):
             return dict(self.df['dx'].value_counts())
     
-    # def __distribution__(self):
-    #     # # data_dir = self.root_dir + '/train'
-    #     # classes_path = glob.glob(self.root_dir+'/**/*.jpg')
-    #     # # classes_path = glob.glob('../../skin_cancer_data/Train'+'/*')
-    #     # classes = [i.split('/')[-1] for i in classes_path]
-    #     class_dcit_lists=[]
-    #     for idx in range(0, len(self.classes)):
-    #         class_dict = {}
-    #         class_dict['class'] = self.classes[idx]
-    #         class_dict['files'] = glob.glob(self.root_dir+'/'+self.classes[idx]+'/*.jpg')
-    #         class_dict['size'] = len(class_dict['files'])
-    #         class_dcit_lists.append(class_dict)
-    #     sorted_list = sorted(class_dcit_lists, key= lambda class_dcit_lists: class_dcit_lists['size'])
-    #     return sorted_list
-
 
     def __getitem__(self, idx):
         img_path = self.df.iloc[idx, -1]
@@ -126,11 +114,8 @@ class SkinCancer(Dataset):
         image = Image.open(img_path)
         if self.augment_phase and label in self.classes_to_augment:
             image_tensor = self.transform(image)
-            #if label in self.classes_to_augment:
-            #    image_tensor = self.transform(image)
         else:
             image_tensor = self.transform_NoAug(image)
-        # image_tensor = self.transform(image)
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
@@ -226,7 +211,12 @@ class SkinCancerWithAugmentation(Dataset):
                         transform_list.append(transforms.ColorJitter())
                     elif 'RandomRotation' in augmentation_name:
                         transform_list.append(transforms.RandomRotation(30))
-            
+                    elif 'RandomInvert' in augmentation_name:
+                        transform_list.append(transforms.RandomInvert(0.5))
+                    elif 'RandomAdjustSharpness' in augmentation_name:
+                        transform_list.append(transforms.RandomAdjustSharpness(2, 0.5))
+                    elif 'RandomContrast' in augmentation_name:
+                        transform_list.append(transforms.RandomContrast(0.5))
             # Combine the selected transforms
             augmentations_dict[class_name] = transforms.Compose(transform_list)
         # print(augmentations_dict)

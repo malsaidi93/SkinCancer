@@ -60,7 +60,7 @@ def plot_confusion_matrix(cm, class_names):
     return figure
 
 
-def train_epoch(model, device, dataloader, loss_fn, optimizer, classes_to_augment=[]):
+def train_epoch(model, device, dataloader, loss_fn, optimizer, augment_phase, classes_to_augment=[]):
     train_loss, train_correct = 0.0, 0
     model.train()
 
@@ -159,24 +159,7 @@ def test_inference(model, device, dataloader, loss_fn, class_names):
     cf_matrix = confusion_matrix(y_true, y_pred)
     cf_figure = plot_confusion_matrix(cf_matrix, class_names)
 
-    #     f_l = [f1_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    #     p_l = [precision_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    #     r_l = [recall_score(p, t, average='macro') for t,p in zip(y_t, y_p)]
-    #     # auc_l = [roc_auc_score(p.cpu().numpy(), t.cpu().numpy(), multi_class='ovr') for t,p in zip(y_true,y_pred)]
-
-    #     f1_s = sum(f_l)/len(f_l)
-    #     # print('f1:', f1_s)
-    #     p_s = sum(p_l)/len(p_l)
-    #     r_s = sum(r_l)/len(r_l)
-
-    # m_dict = pd.DataFrame({'F1_Score' : f1_s,
-    #       'Precision' : p_s, 
-    #       'Recall' : r_s})
-
-    # metrics_table.add_data(f1_s,p_s,r_s)
-
     #     wandb.log({"Testing-Confusion-Matrix": wandb.plot.confusion_matrix(probs=None, y_true=y_true, preds = y_pred, class_names = class_names)})
-
     #     wandb.log({"Metrics-Table": wandb.Table(columns=['F1_Score','Precision','Recall'], data=[[f1_s, p_s, r_s]])})
 
     return test_loss, test_correct, cf_figure, cf_matrix
@@ -201,10 +184,12 @@ if __name__ == '__main__':
     # ======================= DATA ======================= #
 
     data_dir = '../data/Combined_data/'
-    dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
+    # dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
 
     dataset_size = len(dataset)
-    test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
+    # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     classes = np.unique(dataset.classes)
 
     # ======================= Model | Loss Function | Optimizer ======================= #
@@ -317,10 +302,10 @@ if __name__ == '__main__':
             start_epoch = time.time()
             
             if augment_phase:
-                # LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
+                LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
                 train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer, augment_phase, classes_to_augment)
             else:
-                train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer)
+                train_loss, train_correct = train_epoch(model, device, train_loader, criterion, optimizer, augment_phase)
                 
 
             train_loss = train_loss / len(train_loader.sampler)
@@ -341,7 +326,7 @@ if __name__ == '__main__':
             
         # ======================= Test Model on HOS ======================= #
         val_loss, val_correct, classes_to_augment = valid_epoch(model, device, val_loader, criterion, dataset.classes)
-        # augment_phase = True
+        augment_phase = True
         LOGGER.info(f'Augment: {augment_phase} Classes_to_Augment: {classes_to_augment}')
         
         # Validation Metrics
