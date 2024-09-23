@@ -88,7 +88,8 @@ class SkinCancer(Dataset):
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
                                             # transforms.RandomInvert(0.5),
                                             # transforms.RandomAutocontrast(0.5),
-                                            transforms.RandomAdjustSharpness(2,0.5),
+                                            # transforms.RandomAdjustSharpness(2,0.5),
+                                            transforms.AutoAugment(),
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
                                             ])
@@ -154,7 +155,7 @@ class SkinCancerWithAugmentation(Dataset):
         self.transform = transforms.Compose([transforms.Resize((224,224)), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])])
         self.augment_phase = augment_phase
         self.classes_to_augment = classes_to_augment
-        self.softmax = pd.read_excel('../reports/combined_reports.xlsx', sheet_name='Softmax_Values', index_col=0)
+        self.softmax = pd.read_excel('../reports/combined_reports.xlsx', sheet_name='Softmax Values', index_col=0)
         self.aug_list = self.__augmentationslist__(self.softmax)
 
     def __getclassificationreport__(self):
@@ -217,6 +218,8 @@ class SkinCancerWithAugmentation(Dataset):
                         transform_list.append(transforms.RandomAdjustSharpness(2, 0.5))
                     elif 'RandomContrast' in augmentation_name:
                         transform_list.append(transforms.RandomContrast(0.5))
+                    elif 'AutoAugment' in augmentation_name:
+                        transform_list.append(transforms.AutoAugment())
             # Combine the selected transforms
             augmentations_dict[class_name] = transforms.Compose(transform_list)
         # print(augmentations_dict)
@@ -233,7 +236,9 @@ class SkinCancerWithAugmentation(Dataset):
         # else:
         #     image_tensor = self.transforms.ToTensor()(image)
         image_tensor = self.transform(image)
-        image_tensor = self.aug_list[label](image_tensor)
+        if label != 'nv':
+            image_tensor = self.aug_list[label](image_tensor)
+
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
