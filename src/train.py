@@ -107,13 +107,27 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
 
     LOGGER.info(f'='*20)
-    for class_id in classification_rep.keys():
-        if class_id in  class_names:
-            # if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
-            if float(classification_rep[class_id]['f1-score']) <= random.randint(0,1):
-                classes_to_augment.append(class_id)
+    LOGGER.info(f'Classification Report:')
+    for key, values in classification_rep.items():
+        LOGGER.info(f'{key} => {values}')
+    LOGGER.info(f'='*20)
+    # f1_scores = {}
+    #for class_id in classification_rep.keys():
+    #    if class_id in class_names:
+    #        # f1_scores[classification_rep[class_id]] = float(classification_rep[class_id]['f1-score']) 
+    #        # if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
+    #        if random.random() <= float(classification_rep[class_id]['f1-score']):
+    #            classes_to_augment.append(class_id)
+    
+    f1_scores = np.array([classification_rep[class_id]['f1-score'] for class_id in class_names])
+    softmax_probs = np.exp(f1_scores) / np.sum(np.exp(f1_scores))
+    print(f"Softmax Probabilities: {softmax_probs}")
+    for idx, class_id in enumerate(class_names):
+        if random.random() <= softmax_probs[idx]:
+            classes_to_augment.append(class_id)
 
 
+    # print(f"\n \t ==== \n {f1_scores} \n ====")
     return valid_loss, val_correct, classes_to_augment
 
 def batch_distribution(dataloader):
@@ -181,12 +195,12 @@ if __name__ == '__main__':
     # ======================= DATA ======================= #
 
     data_dir = '../data/Combined_data/'
-    # dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
-    dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
+    dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
+    # dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
 
     dataset_size = len(dataset)
-    # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
-    test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
+    test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
+    # test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     classes = np.unique(dataset.classes)
 
     # ======================= Model | Loss Function | Optimizer ======================= #

@@ -37,7 +37,9 @@ def args_parser():
     
     parser.add_argument('--modality', type=str, default='augmented', help="type of data [original or augmented or GAN]")
     
-    parser.add_argument('--aug_type', type=str, default='DynamicAugmentationv2', help="type of data [original or augmented or GAN]")
+    parser.add_argument('--aug_type', type=str, default='DynamicAugmentv3.2', help="type of data [original or augmented or GAN]")
+    
+    parser.add_argument('--dynamic', type=bool, default=True, help="type of data [original or augmented or GAN]")
     
     parser.add_argument('--imbalanced', type=bool, default=False, help="To use cuda, set \
                         to a specific GPU ID. Default set to use CPU.")
