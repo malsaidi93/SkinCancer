@@ -107,13 +107,10 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
     classification_rep = classification_report(y_true, y_pred, target_names=class_names, output_dict=True)
 
     LOGGER.info(f'='*20)
-    LOGGER.info(f'Classification Report:')
-    for key, values in classification_rep.items():
-        LOGGER.info(f'{key} => {values}')
-    LOGGER.info(f'='*20)
     for class_id in classification_rep.keys():
         if class_id in  class_names:
-            if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
+            # if float(classification_rep[class_id]['f1-score']) <= args.threshold_aug:
+            if float(classification_rep[class_id]['f1-score']) <= random.randint(0,1):
                 classes_to_augment.append(class_id)
 
 
