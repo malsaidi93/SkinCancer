@@ -83,13 +83,13 @@ class SkinCancer(Dataset):
                                             transforms.ToTensor(),
                                             # transforms.RandomHorizontalFlip(),  # Random horizontal flip
                                             # transforms.RandomVerticalFlip(),  # Random vertical flip
-                                            # transforms.RandomRotation(20),
+                                            transforms.RandomRotation((0,180)),
                                             # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),  # Color jitter
                                             # transforms.RandomGrayscale(p=0.5),  # Randomly convert to grayscale
-                                            # transforms.RandomInvert(0.5),
+                                            transforms.RandomInvert(0.5),
                                             # transforms.RandomAutocontrast(0.5),
                                             # transforms.RandomAdjustSharpness(2,0.5),
-                                            transforms.AutoAugment(),
+                                            #transforms.AutoAugment(),
                                             transforms.Resize((224,224)),
                                             transforms.Normalize([0.5], [0.5])
                                             ])
@@ -113,10 +113,13 @@ class SkinCancer(Dataset):
         img_path = self.df.iloc[idx, -1]
         label = self.df.iloc[idx, 2]
         image = Image.open(img_path)
-        if self.augment_phase and label in self.classes_to_augment:
-            image_tensor = self.transform(image)
-        else:
-            image_tensor = self.transform_NoAug(image)
+        #if self.augment_phase and label in self.classes_to_augment:
+        #    image_tensor = self.transform(image)
+        #else:
+        #    image_tensor = self.transform_NoAug(image)
+        
+        # deterministically augmenting all images
+        image_tensor = self.transform(image)
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
@@ -192,7 +195,7 @@ class SkinCancerWithAugmentation(Dataset):
     def __distribution__(self):
             return dict(self.df['dx'].value_counts())
             
-    def __augmentationslist__(self, df, threshold=0.20):
+    def __augmentationslist__(self, df, threshold=None):
         augmentations_dict = {}
         
         # Iterate over columns (classes)
@@ -201,7 +204,7 @@ class SkinCancerWithAugmentation(Dataset):
             
             # Iterate over rows (augmentations)
             for augmentation_name, probability in df[class_name].items():
-                if probability > threshold:
+                if probability > random.random():
                     if 'RandomVerticalFlip' in augmentation_name:
                         transform_list.append(transforms.RandomVerticalFlip())
                     elif 'RandomHorizontalFlip' in augmentation_name:
@@ -242,5 +245,41 @@ class SkinCancerWithAugmentation(Dataset):
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
+    
+class CIFAR100Dataset(Dataset):
+    def __init__(self, file_path, transform=None):
+        """
+        Args:
+            file_path (str): Path to the CIFAR-100 pickle file.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+        # Load data from the CIFAR-100 pickle file
+        with open(file_path, 'rb') as f:
+            data_dict = pickle.load(f, encoding='bytes')
+        
+        self.data = data_dict[b'data']
+        self.labels = data_dict[b'fine_labels']
+        
+        # Reshape the data into 32x32x3 images
+        # self.data = self.data.reshape(len(self.data), 3, 32, 32).astype(np.float32) / 255.0  # Normalizing
+        self.data = np.transpose(self.data, (0, 2, 3, 1))  # Convert to (N, H, W, C)
+        
+        self.transform = transform  # Transformations like augmentation or normalization
 
+    def __len__(self):
+        # Return the total number of samples
+        return len(self.data)
 
+    def __getitem__(self, idx):
+        # Get the image and label at the index
+        image = self.data[idx]
+        label = self.labels[idx]
+
+        if self.transform:
+            image = self.transform(image)
+        
+        # Convert image and label to torch tensors
+        image = torch.tensor(image).permute(2, 0, 1)  # Convert to (C, H, W) for PyTorch
+        label = torch.tensor(label).long()
+        
+        return image, label

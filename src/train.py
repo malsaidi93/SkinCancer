@@ -195,12 +195,12 @@ if __name__ == '__main__':
     # ======================= DATA ======================= #
 
     data_dir = '../data/Combined_data/'
-    dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
-    # dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
+    #dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
+    dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
 
     dataset_size = len(dataset)
-    test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
-    # test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
+    # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
+    test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     classes = np.unique(dataset.classes)
 
     # ======================= Model | Loss Function | Optimizer ======================= #
