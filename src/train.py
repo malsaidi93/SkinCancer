@@ -195,21 +195,25 @@ if __name__ == '__main__':
     # ======================= DATA ======================= #
 
     data_dir = '../data/Combined_data/'
-    #dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
-    dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
-
+    # dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
+    # dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
+    dataset = CIFAR100('../data/CIFAR100/train', '../data/CIFAR100/meta')
+    
     dataset_size = len(dataset)
     # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
-    test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
+    # test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
+    test_dataset = CIFAR100('../data/CIFAR100/test', '../data/CIFAR100/meta')
     classes = np.unique(dataset.classes)
 
     # ======================= Model | Loss Function | Optimizer ======================= #
-
+    
+    # output_classes = 7 # HAM10K
+    output_classes = 100 # CIFAR
     if args.model == 'efficientnet':
         model = efficientnet()
 
     elif args.model == 'resnet':
-        model = resnet()
+        model = resnet(output_classes)
 
     elif args.model == 'vit':
         model = vit()

@@ -45,7 +45,7 @@ from collections import Counter
 
 import datetime
 from models import *
-from dataset import SkinCancer, SkinCancerCustom, CombinedDataset, SkinCancerWithAugmentation
+from dataset import SkinCancer, SkinCancerCustom, CombinedDataset, SkinCancerWithAugmentation, CIFAR100
 from torch.utils.tensorboard import SummaryWriter
 
 import warnings

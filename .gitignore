@@ -23,4 +23,5 @@ env/*
 env
 /env/*
 augment/images/*
+src/*.swp
 /tb_logs/*

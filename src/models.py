@@ -13,14 +13,13 @@ def efficientnet():
     model.classifier.__setitem__(-1 , new_fc)
     return model
 
-def resnet():
+def resnet(output):
     model = models.resnet50(weights='ResNet50_Weights.DEFAULT')
     old_fc = model.fc
-    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 7, bias=True)
+    new_fc = nn.Linear(in_features=old_fc.in_features, out_features= 100, bias=True)
     model.fc = new_fc
     
     return model
-
 
 def vit():
     model = models.vit_b_16(weights='ViT_B_16_Weights.DEFAULT')

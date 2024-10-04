@@ -1,5 +1,6 @@
 import os, sys, glob
 import torch
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
@@ -245,26 +246,46 @@ class SkinCancerWithAugmentation(Dataset):
         label_id = torch.tensor(self.class_to_id[str(label)])
         return image_tensor, label_id
 
-    
-class CIFAR100Dataset(Dataset):
-    def __init__(self, file_path, transform=None):
+import pickle
+import torch
+from torch.utils.data import Dataset
+import numpy as np
+
+class CIFAR100(Dataset):
+    def __init__(self, data_file, meta_file, transform=None):
         """
         Args:
-            file_path (str): Path to the CIFAR-100 pickle file.
+            data_file (str): Path to the CIFAR-100 pickle file (train/test).
+            meta_file (str): Path to the CIFAR-100 meta file (for class names).
             transform (callable, optional): Optional transform to be applied on a sample.
         """
         # Load data from the CIFAR-100 pickle file
-        with open(file_path, 'rb') as f:
+        with open(data_file, 'rb') as f:
             data_dict = pickle.load(f, encoding='bytes')
         
         self.data = data_dict[b'data']
-        self.labels = data_dict[b'fine_labels']
+        self.labels = data_dict[b'fine_labels']  # These are the class IDs
         
         # Reshape the data into 32x32x3 images
-        # self.data = self.data.reshape(len(self.data), 3, 32, 32).astype(np.float32) / 255.0  # Normalizing
+        self.data = self.data.reshape(len(self.data), 3, 32, 32)
         self.data = np.transpose(self.data, (0, 2, 3, 1))  # Convert to (N, H, W, C)
+
+        # Load class names from the meta file
+        with open(meta_file, 'rb') as f:
+            meta_dict = pickle.load(f, encoding='bytes')
         
-        self.transform = transform  # Transformations like augmentation or normalization
+        # Assign class names to variable `classes` based on fine_label_names
+        self.classes = [name.decode('utf-8') for name in meta_dict[b'fine_label_names']]
+        
+        # Get unique class IDs from the loaded labels
+        self.class_ids = sorted(set(self.labels))
+        
+        # self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224)), transforms.Normalize([0.5], [0.5])]) # Transformations like augmentation or normalization
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),  # Resizing CIFAR images from 32x32 to 224x224
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to [-1, 1]
+        ])
 
     def __len__(self):
         # Return the total number of samples
@@ -273,13 +294,70 @@ class CIFAR100Dataset(Dataset):
     def __getitem__(self, idx):
         # Get the image and label at the index
         image = self.data[idx]
-        label = self.labels[idx]
+        label = self.labels[idx]  # This is the fine class ID
 
-        if self.transform:
-            image = self.transform(image)
+        # Convert NumPy image array to a PIL image for resizing
+        image = Image.fromarray(np.uint8(image))
+
+        # Apply transformations
+        image = self.transform(image)
         
-        # Convert image and label to torch tensors
-        image = torch.tensor(image).permute(2, 0, 1)  # Convert to (C, H, W) for PyTorch
+        # Return image and label as tensors
         label = torch.tensor(label).long()
-        
+
         return image, label
+
+    def get_class_name(self, class_id):
+        """
+        Args:
+            class_id (int): Class ID from 0 to 99 (fine labels).
+        Returns:
+            str: The class name corresponding to the class ID.
+        """
+        return self.classes[class_id]
+
+
+
+    
+# class CIFAR100(Dataset):
+#     def __init__(self, file_path, transform=None):
+#         """
+#         Args:
+#             file_path (str): Path to the CIFAR-100 pickle file.
+#             transform (callable, optional): Optional transform to be applied on a sample.
+#         """
+#         # Load data from the CIFAR-100 pickle file
+#         with open(file_path, 'rb') as f:
+#             data_dict = pickle.load(f, encoding='bytes')
+        
+#         self.data = data_dict[b'data']
+#         self.labels = data_dict[b'fine_labels']
+#         self.classes = np.unique(self.labels) 
+#         # Reshape the data into 32x32x3 images
+#         # self.data = self.data.reshape(len(self.data), 3, 32, 32).astype(np.float32) / 255.0  # Normalizing
+#         self.data = np.transpose(self.data, (0, 2, 3, 1))  # Convert to (N, H, W, C)
+#         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224)), transforms.Normalize([0.5], [0.5])]) # Transformations like augmentation or normalization
+        
+#         with open('../data/CIFAR100/train/cifar-100-python/meta', 'rb') as f:
+#             meta_dict = pickle.load(f, encoding='bytes')
+
+#         self.classes = [name.decode('utf-8') for name in meta_dict[b'fine_label_name']]
+
+#     def get_class_name(self):
+#         return self.class_names[class_id]
+
+#     def __len__(self):
+#         # Return the total number of samples
+#         return len(self.data)
+
+#     def __getitem__(self, idx):
+#         # Get the image and label at the index
+#         image = self.data[idx]
+#         label = self.labels[idx]
+#         image = self.transform(image)
+        
+#         # Convert image and label to torch tensors
+#         image = image.permute(2, 0, 1)  # Convert to (C, H, W) for PyTorch
+#         label = label.long()
+        
+#         return image, label
