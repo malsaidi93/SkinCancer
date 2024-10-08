@@ -26,14 +26,9 @@ def SoftmaxProbs(aug, softmax_values):
 
 if __name__ == "__main__":
     root = "../reports/"  # Specify the correct path
-    class_names = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
-    combined_reports = main(root, class_names)
-
-    # Convert combined_reports to DataFrame for Excel output
-    df_f1_scores = pd.DataFrame.from_dict(combined_reports, orient='index', columns=class_names)
 
     # headers = ["Filename", "akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
-    headers = ['apple',
+    class_names = ['apple',
                'aquarium_fish',
                'baby',
                'bear',
@@ -133,6 +128,13 @@ if __name__ == "__main__":
                'wolf',
                'woman',
                'worm']
+    
+    headers = ["Filename"] + class_names
+    combined_reports = main(root, class_names)
+    
+    # Convert combined_reports to DataFrame for Excel output
+    df_f1_scores = pd.DataFrame.from_dict(combined_reports, orient='index', columns=class_names)
+    
     table = []
     forSoftmax = []
     aug = []                                                                      
@@ -156,7 +158,7 @@ if __name__ == "__main__":
     df_softmax = pd.DataFrame(softmax_data, index=aug, columns=class_names)
 
     # Write both DataFrames to Excel in different sheets
-    with pd.ExcelWriter('../reports/combined_reports.xlsx') as writer:
+    with pd.ExcelWriter('../reports/combined_reports_cifar.xlsx') as writer:
         df_f1_scores.to_excel(writer, sheet_name='F1-Scores')
         df_softmax.to_excel(writer, sheet_name='Softmax Values')
 

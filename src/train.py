@@ -1,6 +1,6 @@
 from imports import *
-from transform_list import transform as T
-
+# from transform_list import transform
+from torchvision import transforms
 """
 Augmentations With F1: uncomment line 16-27, and comment tranforms in dataset file to only resize and toTensor
 All_ augmentation : Put the tranforms in dataset.py file and comment the limitation of only F1 augmentations
@@ -193,17 +193,29 @@ if __name__ == '__main__':
     # metrics_table = wandb.Table(columns=['F1_Score','Precision','Recall'])
 
     # ======================= DATA ======================= #
-
+    
+    # transform only for cifar10
+    transformation = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.RandomRotation((0,90)),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+    
     data_dir = '../data/Combined_data/'
     # dataset = SkinCancerWithAugmentation(data_dir, '../csv/train.csv', transform=None)
     # dataset = SkinCancer(data_dir, '../csv/train.csv', transform=None)
-    dataset = CIFAR100('../data/CIFAR100/train', '../data/CIFAR100/meta')
+    # dataset = CIFAR100('../data/CIFAR100/train', '../data/CIFAR100/meta')
+    dataset = torchvision.datasets.CIFAR10(root='../data/cifar10', train=True, download=True, transform=transformation)
     
-    dataset_size = len(dataset)
     # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
     # test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
-    test_dataset = CIFAR100('../data/CIFAR100/test', '../data/CIFAR100/meta')
+    # test_dataset = CIFAR100('../data/CIFAR100/test', '../data/CIFAR100/meta')
+    test_dataset = torchvision.datasets.CIFAR10(root='../data/cifar10', train=False, download=True, transform=None)
+    
+    
     classes = np.unique(dataset.classes)
+    dataset_size = len(dataset)
 
     # ======================= Model | Loss Function | Optimizer ======================= #
     
