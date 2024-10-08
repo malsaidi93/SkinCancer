@@ -284,6 +284,7 @@ class CIFAR100(Dataset):
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),  # Resizing CIFAR images from 32x32 to 224x224
             transforms.ToTensor(),
+            transforms.RandomHorizontalFlip(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to [-1, 1]
         ])
 
