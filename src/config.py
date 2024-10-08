@@ -37,7 +37,7 @@ def args_parser():
     
     parser.add_argument('--modality', type=str, default='augmented', help="type of data [original or augmented or GAN]")
     
-    parser.add_argument('--aug_type', type=str, default='CIFAR-RandomHorizontalFlip', help="type of data [original or augmented or GAN]")
+    parser.add_argument('--aug_type', type=str, default='CIFAR-RandomRotation', help="type of data [original or augmented or GAN]")
     
     parser.add_argument('--dynamic', type=bool, default=True, help="type of data [original or augmented or GAN]")
     

@@ -215,7 +215,7 @@ class SkinCancerWithAugmentation(Dataset):
                     elif 'RandomColorJitter' in augmentation_name:
                         transform_list.append(transforms.ColorJitter())
                     elif 'RandomRotation' in augmentation_name:
-                        transform_list.append(transforms.RandomRotation(30))
+                        transform_list.append(transforms.RandomRotation((0,30)))
                     elif 'RandomInvert' in augmentation_name:
                         transform_list.append(transforms.RandomInvert(0.5))
                     elif 'RandomAdjustSharpness' in augmentation_name:
@@ -284,7 +284,7 @@ class CIFAR100(Dataset):
         self.transform = transforms.Compose([
             transforms.Resize((224, 224)),  # Resizing CIFAR images from 32x32 to 224x224
             transforms.ToTensor(),
-            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation((0,90)),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to [-1, 1]
         ])
 

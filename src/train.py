@@ -121,7 +121,7 @@ def valid_epoch(model,device,dataloader,loss_fn, class_names):
     
     f1_scores = np.array([classification_rep[class_id]['f1-score'] for class_id in class_names])
     softmax_probs = np.exp(f1_scores) / np.sum(np.exp(f1_scores))
-    print(f"Softmax Probabilities: {softmax_probs}")
+    # print(f"Softmax Probabilities: {softmax_probs}")
     for idx, class_id in enumerate(class_names):
         if random.random() <= softmax_probs[idx]:
             classes_to_augment.append(class_id)
