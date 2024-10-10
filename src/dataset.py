@@ -180,15 +180,11 @@ class SkinCancerWithAugmentation(Dataset):
             aug.append(filename)                                                      
             forSoftmax.append(list(values.values()))
         
-        # Calculate softmax across the columns (axis=0)
         softmax_data = softmax(forSoftmax, axis=0)
-        
-        # create Dictionary
         softmax_dict = {}
         for idx, probs in enumerate(softmax_data):
             softmax_dict[probs]
             row.extend(probs)                  
-
 
     def __len__(self):
         return len(self.image_paths)
@@ -199,11 +195,9 @@ class SkinCancerWithAugmentation(Dataset):
     def __augmentationslist__(self, df, threshold=None):
         augmentations_dict = {}
         
-        # Iterate over columns (classes)
         for class_name in df.columns:
             transform_list = []
             
-            # Iterate over rows (augmentations)
             for augmentation_name, probability in df[class_name].items():
                 if probability > random.random():
                     if 'RandomVerticalFlip' in augmentation_name:
@@ -224,9 +218,7 @@ class SkinCancerWithAugmentation(Dataset):
                         transform_list.append(transforms.RandomContrast(0.5))
                     elif 'AutoAugment' in augmentation_name:
                         transform_list.append(transforms.AutoAugment())
-            # Combine the selected transforms
             augmentations_dict[class_name] = transforms.Compose(transform_list)
-        # print(augmentations_dict)
         return augmentations_dict
     
     def __getitem__(self, idx):
@@ -259,51 +251,38 @@ class CIFAR100(Dataset):
             meta_file (str): Path to the CIFAR-100 meta file (for class names).
             transform (callable, optional): Optional transform to be applied on a sample.
         """
-        # Load data from the CIFAR-100 pickle file
         with open(data_file, 'rb') as f:
             data_dict = pickle.load(f, encoding='bytes')
         
         self.data = data_dict[b'data']
         self.labels = data_dict[b'fine_labels']  # These are the class IDs
         
-        # Reshape the data into 32x32x3 images
         self.data = self.data.reshape(len(self.data), 3, 32, 32)
-        self.data = np.transpose(self.data, (0, 2, 3, 1))  # Convert to (N, H, W, C)
+        self.data = np.transpose(self.data, (0, 2, 3, 1))  # (N, H, W, C)
 
-        # Load class names from the meta file
         with open(meta_file, 'rb') as f:
             meta_dict = pickle.load(f, encoding='bytes')
         
-        # Assign class names to variable `classes` based on fine_label_names
         self.classes = [name.decode('utf-8') for name in meta_dict[b'fine_label_names']]
-        
-        # Get unique class IDs from the loaded labels
         self.class_ids = sorted(set(self.labels))
         
-        # self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224)), transforms.Normalize([0.5], [0.5])]) # Transformations like augmentation or normalization
         self.transform = transforms.Compose([
-            transforms.Resize((224, 224)),  # Resizing CIFAR images from 32x32 to 224x224
+            transforms.Resize((224, 224)), 
             transforms.ToTensor(),
-            transforms.RandomRotation((0,90)),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize to [-1, 1]
+            # transforms.RandomRotation((0,90)),
+            transforms.RandomHorizontalFlip(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) 
         ])
 
     def __len__(self):
-        # Return the total number of samples
         return len(self.data)
 
     def __getitem__(self, idx):
-        # Get the image and label at the index
         image = self.data[idx]
-        label = self.labels[idx]  # This is the fine class ID
+        label = self.labels[idx]
 
-        # Convert NumPy image array to a PIL image for resizing
         image = Image.fromarray(np.uint8(image))
-
-        # Apply transformations
         image = self.transform(image)
-        
-        # Return image and label as tensors
         label = torch.tensor(label).long()
 
         return image, label
@@ -319,46 +298,3 @@ class CIFAR100(Dataset):
 
 
 
-    
-# class CIFAR100(Dataset):
-#     def __init__(self, file_path, transform=None):
-#         """
-#         Args:
-#             file_path (str): Path to the CIFAR-100 pickle file.
-#             transform (callable, optional): Optional transform to be applied on a sample.
-#         """
-#         # Load data from the CIFAR-100 pickle file
-#         with open(file_path, 'rb') as f:
-#             data_dict = pickle.load(f, encoding='bytes')
-        
-#         self.data = data_dict[b'data']
-#         self.labels = data_dict[b'fine_labels']
-#         self.classes = np.unique(self.labels) 
-#         # Reshape the data into 32x32x3 images
-#         # self.data = self.data.reshape(len(self.data), 3, 32, 32).astype(np.float32) / 255.0  # Normalizing
-#         self.data = np.transpose(self.data, (0, 2, 3, 1))  # Convert to (N, H, W, C)
-#         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((224,224)), transforms.Normalize([0.5], [0.5])]) # Transformations like augmentation or normalization
-        
-#         with open('../data/CIFAR100/train/cifar-100-python/meta', 'rb') as f:
-#             meta_dict = pickle.load(f, encoding='bytes')
-
-#         self.classes = [name.decode('utf-8') for name in meta_dict[b'fine_label_name']]
-
-#     def get_class_name(self):
-#         return self.class_names[class_id]
-
-#     def __len__(self):
-#         # Return the total number of samples
-#         return len(self.data)
-
-#     def __getitem__(self, idx):
-#         # Get the image and label at the index
-#         image = self.data[idx]
-#         label = self.labels[idx]
-#         image = self.transform(image)
-        
-#         # Convert image and label to torch tensors
-#         image = image.permute(2, 0, 1)  # Convert to (C, H, W) for PyTorch
-#         label = label.long()
-        
-#         return image, label

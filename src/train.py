@@ -198,7 +198,14 @@ if __name__ == '__main__':
     transformation = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
-        transforms.RandomRotation((0,90)),
+        # transforms.RandomRotation((0,90)),
+        transforms.RandomHorizontalFlip(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+    
+    transformation_test = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     ])
     
@@ -211,7 +218,7 @@ if __name__ == '__main__':
     # test_dataset = SkinCancerWithAugmentation(data_dir, '../csv/test.csv', transform=None)
     # test_dataset = SkinCancer(data_dir, '../csv/test.csv', transform=None)
     # test_dataset = CIFAR100('../data/CIFAR100/test', '../data/CIFAR100/meta')
-    test_dataset = torchvision.datasets.CIFAR10(root='../data/cifar10', train=False, download=True, transform=None)
+    test_dataset = torchvision.datasets.CIFAR10(root='../data/cifar10', train=False, download=True, transform=transformation_test)
     
     
     classes = np.unique(dataset.classes)
